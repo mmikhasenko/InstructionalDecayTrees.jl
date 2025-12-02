@@ -1,0 +1,4 @@
+name = "LazyDecayAngles"
+uuid = "1d606af4-d0f8-4ff7-bc8d-eb3f657b7647"
+authors = ["Mikhail Mikhasenko <mikhail.mikhasenko@cern.ch>"]
+version = "0.1.0"
