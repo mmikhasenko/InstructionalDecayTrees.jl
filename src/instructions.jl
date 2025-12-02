@@ -30,9 +30,9 @@ struct MeasurePolar <: AbstractInstruction
 end
 
 """
-    MeasureSpherical(theta_tag, phi_tag, idx)
+    MeasureSpherical(theta_tag, phi_tag, indices)
 
-Measures and stores both the polar angle (theta) and azimuthal angle (phi) of the object at `idx`.
+Measures and stores both the polar angle (theta) and azimuthal angle (phi) of the sum of objects at `indices`.
 """
 struct MeasureSpherical{T<:Tuple} <: AbstractInstruction
     theta_tag::Symbol
@@ -49,3 +49,32 @@ struct MeasureInvariant{T<:Tuple} <: AbstractInstruction
 end
 MeasureInvariant(tag::Symbol, indices::Vector{Int}) = MeasureInvariant(tag, Tuple(indices))
 MeasureInvariant(tag::Symbol, indices::Int...) = MeasureInvariant(tag, indices)
+
+"""
+    MeasureMassCosThetaPhi(tag, indices)
+
+Measures and stores a NamedTuple (m, cosθ, ϕ) under the single `tag`.
+The mass is the invariant mass of the sum of `indices`.
+The angles (cosθ, ϕ) are measured for the sum of `indices` in the current frame.
+"""
+struct MeasureMassCosThetaPhi{T<:Tuple} <: AbstractInstruction
+    tag::Symbol
+    indices::T
+end
+MeasureMassCosThetaPhi(tag::Symbol, indices::Vector{Int}) = MeasureMassCosThetaPhi(tag, Tuple(indices))
+MeasureMassCosThetaPhi(tag::Symbol, indices::Int...) = MeasureMassCosThetaPhi(tag, indices)
+MeasureMassCosThetaPhi(tag::Symbol, index::Int) = MeasureMassCosThetaPhi(tag, (index,))
+
+"""
+    MeasureCosThetaPhi(tag, indices)
+
+Measures and stores a NamedTuple (cosθ, ϕ) under the single `tag`.
+The angles (cosθ, ϕ) are measured for the sum of `indices` in the current frame.
+"""
+struct MeasureCosThetaPhi{T<:Tuple} <: AbstractInstruction
+    tag::Symbol
+    indices::T
+end
+MeasureCosThetaPhi(tag::Symbol, indices::Vector{Int}) = MeasureCosThetaPhi(tag, Tuple(indices))
+MeasureCosThetaPhi(tag::Symbol, indices::Int...) = MeasureCosThetaPhi(tag, indices)
+MeasureCosThetaPhi(tag::Symbol, index::Int) = MeasureCosThetaPhi(tag, (index,))

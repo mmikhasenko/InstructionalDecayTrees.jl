@@ -7,6 +7,8 @@ export
     PlaneAlign, 
     MeasurePolar, 
     MeasureSpherical,
+    MeasureMassCosThetaPhi,
+    MeasureCosThetaPhi,
     MeasureInvariant,
     execute_decay_program,
     apply_decay_instruction

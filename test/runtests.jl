@@ -21,32 +21,32 @@ program = (
     ToHelicityFrame((1, 2, 3, 4)),
     
     # 2. measure angles of 4,3,1 in Total Rest Frame
-    # Updated: Use MeasureSpherical for particle 4 to test new instruction
-    MeasureSpherical(:theta431_total, :phi431_total, (4, 3, 1)),
+    MeasureSpherical(:theta4_total, :phi4_total, 4),
+    MeasurePolar(:theta3_total, 3),
+    MeasurePolar(:theta1_total, 1),
     MeasureInvariant(:m_431, (4, 3, 1)),
 
     # 3. go to (4,3,1)
     ToHelicityFrame((4, 3, 1)),
 
     # 4. measure angles of 4,3 in (4,3,1) frame
-    MeasureSpherical(:theta43_431, :phi43_431, (4,3)),
+    MeasurePolar(:theta4_431, 4),
+    MeasurePolar(:theta3_431, 3),
     MeasureInvariant(:m_43, (4, 3)),
+    
+    # Test MeasureMassCosThetaPhi here
+    MeasureMassCosThetaPhi(:vars_43, (4, 3)),
 
     # 5. go to (4,3)
     ToHelicityFrame((4, 3)),
 
     # 6. measure angles of 4 in (4,3) frame
-    MeasureSpherical(:theta4_43, :phi4_43, 4),
+    # MeasurePolar(:theta4_43, 4),
+    MeasureCosThetaPhi(:vars_4, 4),
     
     # 7. go to 4 (Rest frame of 4)
     ToHelicityFrame((4,))
 )
-
-let
-    (final_objs, results) = execute_decay_program(objs, program)
-
-    results
-end
 
 @testset "LazyDecayAngles Execution" begin
     @info "Starting execution..."
@@ -58,7 +58,21 @@ end
     @test haskey(results, :theta4_total)
     @test haskey(results, :phi4_total)
     @test haskey(results, :m_431)
-    @test haskey(results, :theta4_43)
+    @test haskey(results, :vars_4)
+    @test haskey(results, :vars_43)
+    
+    # Check MeasureMassCosThetaPhi content
+    vars = results.vars_43
+    @test vars isa NamedTuple
+    @test haskey(vars, :m)
+    @test haskey(vars, :cosθ)
+    @test haskey(vars, :ϕ)
+    
+    # Check MeasureCosThetaPhi content
+    vars4 = results.vars_4
+    @test vars4 isa NamedTuple
+    @test haskey(vars4, :cosθ)
+    @test haskey(vars4, :ϕ)
     
     # Check consistency
     # After last boost, object 4 should be at rest (spatial momentum ~ 0)
@@ -70,4 +84,40 @@ end
     # Invariant mass check
     P_431 = objs[4] + objs[3] + objs[1]
     @test results.m_431 ≈ mass(P_431)^2 atol=1e-5
+    
+    # Check MassCosThetaPhi values
+    P_43 = objs[4] + objs[3] 
+    # Wait, these are measured in the boosted frame (after step 3)
+    # We need to reproduce the logic to verify the values if we want to be strict
+    # But since it's generic, checking types and existence is good for integration.
+    # Let's check mass consistency within the result:
+    @test vars.m ≈ sqrt(results.m_43) atol=1e-5
+end
+
+
+let 
+    program2 = (
+        # 1. go to the rest frame of all
+        ToHelicityFrame((1, 2, 3, 4)),
+        
+        # 2. measure angles of 4,3,1 in Total Rest Frame
+        MeasureMassCosThetaPhi(:vars_431, (4, 3, 1)),
+
+        # 3. go to (4,3,1)
+        ToHelicityFrame((4, 3, 1)),
+
+        # 4. measure angles of 4,3 in (4,3,1) frame
+        MeasureMassCosThetaPhi(:vars_431, (4, 3)),
+
+        # 5. go to (4,3)
+        ToHelicityFrame((4, 3)),
+
+        # 6. measure angles of 4 in (4,3) frame
+        MeasureCosThetaPhi(:vars_4, 4),
+    )
+    
+    (final_objs, results) = execute_decay_program(objs, program2)
+
+    # 
+    results
 end

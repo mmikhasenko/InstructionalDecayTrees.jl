@@ -57,6 +57,31 @@ function apply_decay_instruction(instr::MeasureSpherical, objs)
     return (objs, res)
 end
 
+function apply_decay_instruction(instr::MeasureMassCosThetaPhi, objs)
+    p = sum(objs[i] for i in instr.indices)
+    
+    m_val = mass(p)
+    cos_theta_val = cos_theta(p)
+    phi_val = azimuthal_angle(p)
+    
+    # Structure: tag => (m, cosθ, ϕ)
+    val_tuple = (m = m_val, cosθ = cos_theta_val, ϕ = phi_val)
+    
+    return (objs, NamedTuple{(instr.tag,)}((val_tuple,)))
+end
+
+function apply_decay_instruction(instr::MeasureCosThetaPhi, objs)
+    p = sum(objs[i] for i in instr.indices)
+    
+    cos_theta_val = cos_theta(p)
+    phi_val = azimuthal_angle(p)
+    
+    # Structure: tag => (cosθ, ϕ)
+    val_tuple = (cosθ = cos_theta_val, ϕ = phi_val)
+    
+    return (objs, NamedTuple{(instr.tag,)}((val_tuple,)))
+end
+
 function apply_decay_instruction(instr::MeasureInvariant, objs)
     P_tot = sum(objs[i] for i in instr.indices)
     val = mass(P_tot)^2 
