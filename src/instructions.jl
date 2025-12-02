@@ -34,11 +34,14 @@ end
 
 Measures and stores both the polar angle (theta) and azimuthal angle (phi) of the object at `idx`.
 """
-struct MeasureSpherical <: AbstractInstruction
+struct MeasureSpherical{T<:Tuple} <: AbstractInstruction
     theta_tag::Symbol
     phi_tag::Symbol
-    idx::Int
+    indices::T
 end
+MeasureSpherical(theta_tag::Symbol, phi_tag::Symbol, indices::Int...) = MeasureSpherical(theta_tag, phi_tag, indices)
+MeasureSpherical(theta_tag::Symbol, phi_tag::Symbol, indices::Vector{Int}) = MeasureSpherical(theta_tag, phi_tag, Tuple(indices))
+MeasureSpherical(theta_tag::Symbol, phi_tag::Symbol, index::Int) = MeasureSpherical(theta_tag, phi_tag, (index,))
 
 struct MeasureInvariant{T<:Tuple} <: AbstractInstruction
     tag::Symbol

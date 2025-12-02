@@ -49,7 +49,7 @@ function apply_decay_instruction(instr::MeasurePolar, objs)
 end
 
 function apply_decay_instruction(instr::MeasureSpherical, objs)
-    p = objs[instr.idx]
+    p = sum(objs[i] for i in instr.indices)
     val_theta = polar_angle(p)
     val_phi = azimuthal_angle(p)
     # Construct result tuple with both keys

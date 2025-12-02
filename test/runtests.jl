@@ -22,28 +22,31 @@ program = (
     
     # 2. measure angles of 4,3,1 in Total Rest Frame
     # Updated: Use MeasureSpherical for particle 4 to test new instruction
-    MeasureSpherical(:theta4_total, :phi4_total, 4),
-    MeasurePolar(:theta3_total, 3),
-    MeasurePolar(:theta1_total, 1),
+    MeasureSpherical(:theta431_total, :phi431_total, (4, 3, 1)),
     MeasureInvariant(:m_431, (4, 3, 1)),
 
     # 3. go to (4,3,1)
     ToHelicityFrame((4, 3, 1)),
 
     # 4. measure angles of 4,3 in (4,3,1) frame
-    MeasurePolar(:theta4_431, 4),
-    MeasurePolar(:theta3_431, 3),
+    MeasureSpherical(:theta43_431, :phi43_431, (4,3)),
     MeasureInvariant(:m_43, (4, 3)),
 
     # 5. go to (4,3)
     ToHelicityFrame((4, 3)),
 
     # 6. measure angles of 4 in (4,3) frame
-    MeasurePolar(:theta4_43, 4),
+    MeasureSpherical(:theta4_43, :phi4_43, 4),
     
     # 7. go to 4 (Rest frame of 4)
     ToHelicityFrame((4,))
 )
+
+let
+    (final_objs, results) = execute_decay_program(objs, program)
+
+    results
+end
 
 @testset "LazyDecayAngles Execution" begin
     @info "Starting execution..."
