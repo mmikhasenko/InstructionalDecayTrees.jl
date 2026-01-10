@@ -42,6 +42,23 @@ function apply_decay_instruction(instr::PlaneAlign, objs)
     return (final_objs, (;))
 end
 
+function apply_decay_instruction(instr::CompositeInstruction, objs)
+    # Reuse existing program execution logic
+    return execute_decay_program(objs, instr.instructions)
+end
+
+function apply_decay_instruction(instr::ToGottfriedJacksonFrame, objs)
+    # Step 1: Apply ToHelicityFrame (reuses existing implementation)
+    hel_instr = ToHelicityFrame(instr.system_indices)
+    (objs_after_boost, _) = apply_decay_instruction(hel_instr, objs)
+    
+    # Step 2: Apply PlaneAlign (reuses existing implementation)
+    plane_instr = PlaneAlign(instr.z_idx, instr.x_idx)
+    (final_objs, _) = apply_decay_instruction(plane_instr, objs_after_boost)
+    
+    return (final_objs, (;))
+end
+
 function apply_decay_instruction(instr::MeasurePolar, objs)
     p = objs[instr.idx]
     val = polar_angle(p)

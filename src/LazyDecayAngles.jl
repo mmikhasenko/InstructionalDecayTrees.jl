@@ -4,7 +4,9 @@ export
     AbstractInstruction,
     ToHelicityFrame, 
     ToHelicityFrameParticle2,
-    PlaneAlign, 
+    PlaneAlign,
+    ToGottfriedJacksonFrame,
+    CompositeInstruction,
     MeasurePolar, 
     MeasureSpherical,
     MeasureMassCosThetaPhi,
@@ -14,6 +16,7 @@ export
     apply_decay_instruction
 
 include("instructions.jl")
+include("composite_instructions.jl")
 include("execution.jl")
 include("backend_fourvectors.jl")
 

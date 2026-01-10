@@ -23,6 +23,31 @@ struct PlaneAlign <: AbstractInstruction
     x_idx::Int
 end
 
+"""
+    ToGottfriedJacksonFrame(system_indices, z_idx, x_idx)
+
+Composite transformation that:
+1. Boosts to rest frame of system_indices (ToHelicityFrame)
+2. Aligns z_idx along +z and x_idx in xz plane (PlaneAlign)
+"""
+struct ToGottfriedJacksonFrame{T<:Tuple} <: AbstractInstruction
+    system_indices::T
+    z_idx::Int
+    x_idx::Int
+end
+
+# Constructor with multiple forms for system_indices
+ToGottfriedJacksonFrame(indices::Vector{Int}, z_idx::Int, x_idx::Int) = 
+    ToGottfriedJacksonFrame(Tuple(indices), z_idx, x_idx)
+# Special case: 5 Int arguments where first 3 are system_indices, last 2 are z_idx and x_idx
+ToGottfriedJacksonFrame(i1::Int, i2::Int, i3::Int, z_idx::Int, x_idx::Int) = 
+    ToGottfriedJacksonFrame((i1, i2, i3), z_idx, x_idx)
+function ToGottfriedJacksonFrame(system_indices, z_idx, x_idx)
+    indices_tuple = system_indices isa Tuple ? system_indices : 
+                    Tuple(system_indices...)
+    return ToGottfriedJacksonFrame(indices_tuple, z_idx, x_idx)
+end
+
 struct MeasurePolar <: AbstractInstruction
     tag::Symbol
     idx::Int
