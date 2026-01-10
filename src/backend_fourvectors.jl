@@ -35,7 +35,7 @@ function apply_decay_instruction(instr::PlaneAlign, objs)
     # z_idx axis
     axis_z = objs[instr.z_idx]
     # x_idx plane
-    axis_x = objs[instr.x_idx]
+    axis_x = instr.x_idx < 0 ? -objs[-instr.x_idx] : objs[instr.x_idx]
 
     final_objs = map(p -> rotate_to_plane(p, axis_z, axis_x), objs)
 
@@ -53,7 +53,7 @@ function apply_decay_instruction(instr::ToGottfriedJacksonFrame, objs)
     (objs_after_boost, _) = apply_decay_instruction(hel_instr, objs)
 
     # Step 2: Apply PlaneAlign (reuses existing implementation)
-    plane_instr = PlaneAlign(instr.z_idx, instr.x_idx)
+    plane_instr = PlaneAlign(instr.z_idx, -instr.x_idx)
     (final_objs, _) = apply_decay_instruction(plane_instr, objs_after_boost)
 
     return (final_objs, (;))
