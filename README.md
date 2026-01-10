@@ -9,11 +9,11 @@ A lightweight, type-stable DSL for calculating kinematic variables in particle d
 
 ## Installation
 
-This package depends on `FourVectors.jl`, which is an unregistered package from GitHub. The installation behavior depends on your Julia version:
+This package depends on `FourVectors.jl`, which is an unregistered package from GitHub:
 
-- **If using Julia 1.11.5** (the version used in the manifest): The package will be automatically installed when you add `LazyDecayAngles.jl` to your environment, as the manifest includes the exact dependency information.
+- **If `Manifest.toml` is present** (as in this repository): The unregistered package will be automatically installed when you add `LazyDecayAngles.jl` to your environment, as the manifest includes the exact dependency information.
 
-- **If using a different Julia version**: You need to manually install `FourVectors.jl` before adding `LazyDecayAngles.jl`:
+- **If using a different setup without the manifest**: You need to manually install `FourVectors.jl` before adding `LazyDecayAngles.jl`:
   ```julia
   using Pkg
   Pkg.add(url="https://github.com/mmikhasenko/FourVectors.jl.git")
