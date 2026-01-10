@@ -1,13 +1,12 @@
 module LazyDecayAngles
 
-export 
-    AbstractInstruction,
-    ToHelicityFrame, 
+export AbstractInstruction,
+    ToHelicityFrame,
     ToHelicityFrameParticle2,
     PlaneAlign,
     ToGottfriedJacksonFrame,
     CompositeInstruction,
-    MeasurePolar, 
+    MeasurePolar,
     MeasureSpherical,
     MeasureMassCosThetaPhi,
     MeasureCosThetaPhi,
