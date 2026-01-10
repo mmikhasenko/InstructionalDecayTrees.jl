@@ -57,13 +57,13 @@ using Test
     @test abs(P_system.py) < 1e-10
     @test abs(P_system.pz) < 1e-10
 
-    # z_idx (4) should be aligned along +z
+    # beam_idx (4) should be aligned along +z
     p4_final = final_objs[4]
     @test abs(p4_final.px) < 1e-10
     @test abs(p4_final.py) < 1e-10
     @test p4_final.pz > 0  # Should be along +z
 
-    # x_idx (5) should be in xz plane with x > 0
+    # target_idx (5) should be in xz plane with negative Px (standard GJ definition)
     p5_final = final_objs[5]
     @test abs(p5_final.py) < 1e-10  # y component should be zero
     @test p5_final.px < 0  # x component should be negative (in xz plane)
