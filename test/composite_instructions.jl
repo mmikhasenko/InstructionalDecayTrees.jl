@@ -29,6 +29,6 @@ end
 
     @test gj1.system_indices == (1, 2, 3)
     @test gj2.system_indices == (1, 2, 3)
-    @test gj1.z_idx == gj2.z_idx == 4
-    @test gj1.x_idx == gj2.x_idx == 5
+    @test gj1.beam_idx == gj2.beam_idx == (4,)
+    @test gj1.target_idx == gj2.target_idx == (5,)
 end

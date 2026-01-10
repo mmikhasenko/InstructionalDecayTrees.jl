@@ -1,10 +1,30 @@
 using FourVectors
 
+# --- Helper Functions ---
+
+"""
+    get_fourvector(objs, indices::Tuple)
+
+Extract a four-vector from `objs` based on `indices`:
+- Single positive index: returns `objs[index]`
+- Single negative index: returns `-objs[-index]`
+- Multiple indices: returns sum with each index handled independently
+  (e.g., `(1, -2, 3)` → `objs[1] + (-objs[2]) + objs[3]`)
+"""
+function get_fourvector(objs, indices::Tuple{Vararg{Int}})
+    if length(indices) == 1
+        idx = first(indices)
+        return idx < 0 ? -objs[-idx] : objs[idx]
+    else
+        return sum(idx < 0 ? -objs[-idx] : objs[idx] for idx in indices)
+    end
+end
+
 # --- Implementations ---
 
 function apply_decay_instruction(instr::ToHelicityFrame, objs)
-    # Sum selected indices
-    P_tot = sum(objs[i] for i in instr.indices)
+    # Get four-vector from indices (handles single, multiple, and negative indices)
+    P_tot = get_fourvector(objs, instr.indices)
 
     # Apply boost to all
     new_objs = map(p -> transform_to_cmf(p, P_tot), objs)
@@ -13,7 +33,7 @@ function apply_decay_instruction(instr::ToHelicityFrame, objs)
 end
 
 function apply_decay_instruction(instr::ToHelicityFrameParticle2, objs)
-    P_tot = sum(objs[i] for i in instr.indices)
+    P_tot = get_fourvector(objs, instr.indices)
 
     # Uses -vec for Rz and Ry
     # Construct vector with opposite spatial components to get angles
@@ -31,11 +51,9 @@ function apply_decay_instruction(instr::ToHelicityFrameParticle2, objs)
 end
 
 function apply_decay_instruction(instr::PlaneAlign, objs)
-    # Orient
-    # z_idx axis
-    axis_z = objs[instr.z_idx]
-    # x_idx plane
-    axis_x = instr.x_idx < 0 ? -objs[-instr.x_idx] : objs[instr.x_idx]
+    # Get four-vectors from index specifications (handles single, multiple, and negative indices)
+    axis_z = get_fourvector(objs, instr.z_idx)
+    axis_x = get_fourvector(objs, instr.x_idx)
 
     final_objs = map(p -> rotate_to_plane(p, axis_z, axis_x), objs)
 
@@ -53,20 +71,23 @@ function apply_decay_instruction(instr::ToGottfriedJacksonFrame, objs)
     (objs_after_boost, _) = apply_decay_instruction(hel_instr, objs)
 
     # Step 2: Apply PlaneAlign (reuses existing implementation)
-    plane_instr = PlaneAlign(instr.z_idx, -instr.x_idx)
+    # Standard GJ definition: target_idx is always positive but negated when passed to PlaneAlign
+    # Negate each index in target_idx tuple
+    target_idx_negated = Tuple(-idx for idx in instr.target_idx)
+    plane_instr = PlaneAlign(instr.beam_idx, target_idx_negated)
     (final_objs, _) = apply_decay_instruction(plane_instr, objs_after_boost)
 
     return (final_objs, (;))
 end
 
 function apply_decay_instruction(instr::MeasurePolar, objs)
-    p = objs[instr.idx]
+    p = get_fourvector(objs, instr.idx)
     val = polar_angle(p)
     return (objs, NamedTuple{(instr.tag,)}((val,)))
 end
 
 function apply_decay_instruction(instr::MeasureSpherical, objs)
-    p = sum(objs[i] for i in instr.indices)
+    p = get_fourvector(objs, instr.indices)
     val_theta = polar_angle(p)
     val_phi = azimuthal_angle(p)
     # Construct result tuple with both keys
@@ -75,7 +96,7 @@ function apply_decay_instruction(instr::MeasureSpherical, objs)
 end
 
 function apply_decay_instruction(instr::MeasureMassCosThetaPhi, objs)
-    p = sum(objs[i] for i in instr.indices)
+    p = get_fourvector(objs, instr.indices)
 
     m_val = mass(p)
     cos_theta_val = cos_theta(p)
@@ -88,7 +109,7 @@ function apply_decay_instruction(instr::MeasureMassCosThetaPhi, objs)
 end
 
 function apply_decay_instruction(instr::MeasureCosThetaPhi, objs)
-    p = sum(objs[i] for i in instr.indices)
+    p = get_fourvector(objs, instr.indices)
 
     cos_theta_val = cos_theta(p)
     phi_val = azimuthal_angle(p)
@@ -100,7 +121,7 @@ function apply_decay_instruction(instr::MeasureCosThetaPhi, objs)
 end
 
 function apply_decay_instruction(instr::MeasureInvariant, objs)
-    P_tot = sum(objs[i] for i in instr.indices)
+    P_tot = get_fourvector(objs, instr.indices)
     val = mass(P_tot)^2
     return (objs, NamedTuple{(instr.tag,)}((val,)))
 end
