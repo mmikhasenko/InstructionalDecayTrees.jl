@@ -1,0 +1,15 @@
+{
+  "cSpell.words": [
+    "atol",
+    "cosθ",
+    "fourvectors",
+    "Gottfried",
+    "Helicity",
+    "objs",
+    "testset"
+  ],
+  "[julia]": {
+    "editor.defaultFormatter": "0h7z.vscode-julia-format",
+    "editor.formatOnSave": true
+  }
+}

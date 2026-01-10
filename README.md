@@ -40,14 +40,44 @@ println(results.theta1)
 println(results.m12)
 ```
 
+### Composite Instructions Example
+
+```julia
+using LazyDecayAngles
+using FourVectors
+
+# Create a composite instruction from existing instructions
+composite = CompositeInstruction((
+    ToHelicityFrame((1, 2, 3)),
+    PlaneAlign(4, 5)
+))
+
+# Or use the built-in ToGottfriedJacksonFrame
+program = (
+    ToGottfriedJacksonFrame((1, 2, 3), 4, 5),
+    MeasureSpherical(:theta, :phi, (2, 3))
+)
+
+objs = (p1, p2, p3, p4, p5)
+(final_objs, results) = execute_decay_program(objs, program)
+```
+
 ### Advanced Usage
 
 See [docs/complex_topology.jl](docs/complex_topology.jl) for a runnable example of analyzing a $B_p \to (D K) + (D^0 \pi)$ decay chain.
 
 ## Instructions
+
+### Frame Transformations
 - `ToHelicityFrame(indices)`: Boost all objects to the rest frame of the sum of `indices`.
 - `ToHelicityFrameParticle2(indices)`: Boost to rest frame of `indices` using the "particle 2" convention (rotates to align momentum along -z before boost).
-- `PlaneAlign(z_idx, x_idx)`: Rotate the frame to align `z_idx` along +z and `x_idx` in the xz plane (x>0). Usually used after `ToHelicityFrame`.
+- `PlaneAlign(z_idx, x_idx)`: Rotate the frame to align `z_idx` along +z and `x_idx` in the xz plane. If `x_idx` is negative, uses the opposite direction of the corresponding vector. Usually used after `ToHelicityFrame`.
+- `ToGottfriedJacksonFrame(system_indices, z_idx, x_idx)`: Composite transformation that combines `ToHelicityFrame(system_indices)` followed by `PlaneAlign(z_idx, x_idx)`. This implements the Gottfried-Jackson frame transformation commonly used in hadronic physics analyses.
+
+### Composite Instructions
+- `CompositeInstruction(instructions)`: General-purpose composite instruction that holds a sequence of instructions. The type parameter encodes the instruction sequence, enabling type-level dispatch. Useful for creating reusable transformation patterns.
+
+### Measurement Instructions
 - `MeasurePolar(tag, idx)`: Store polar angle of `objs[idx]`.
 - `MeasureSpherical(theta_tag, phi_tag, indices)`: Store polar and azimuthal angles of the sum of `indices`.
 - `MeasureCosThetaPhi(tag, indices)`: Store (cosθ, ϕ) of sum of `indices` as a NamedTuple.

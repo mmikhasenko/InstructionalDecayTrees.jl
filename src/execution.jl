@@ -19,13 +19,13 @@ execute_decay_program(objs, ::Tuple{}) = (objs, (;))
 function execute_decay_program(objs, program::Tuple)
     head = program[1]
     tail = Base.tail(program)
-    
+
     # Execute current instruction
     (objs_after_head, head_results) = apply_decay_instruction(head, objs)
-    
+
     # Recursively execute the rest
     (final_objs, tail_results) = execute_decay_program(objs_after_head, tail)
-    
+
     # Combine results
     return (final_objs, merge(head_results, tail_results))
 end
