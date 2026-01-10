@@ -7,6 +7,18 @@ A lightweight, type-stable DSL for calculating kinematic variables in particle d
 - **Type Stable:** Programs are Tuples, results are NamedTuples. Fully inferable by the Julia compiler.
 - **Generic:** The core logic is type-agnostic. Physics backend (currently `FourVectors.jl`) is modular.
 
+## Installation
+
+This package depends on `FourVectors.jl`, which is an unregistered package from GitHub:
+
+- **If `Manifest.toml` is present** (as in this repository): The unregistered package will be automatically installed when you add `LazyDecayAngles.jl` to your environment, as the manifest includes the exact dependency information.
+
+- **If using a different setup without the manifest**: You need to manually install `FourVectors.jl` before adding `LazyDecayAngles.jl`:
+  ```julia
+  using Pkg
+  Pkg.add(url="https://github.com/mmikhasenko/FourVectors.jl.git")
+  ```
+
 ## Usage
 
 ### Basic Example
