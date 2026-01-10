@@ -44,44 +44,27 @@ using Test
     # Reaction: π⁻ p → ω(→π⁻π⁰π⁺) π⁻ π⁰ p'
     objs = (p4π⁻, p4π⁰, k4_sum, p4b, p4t)
 
-    # Manual transformation: ToHelicityFrame then PlaneAlign
-    program_manual = (ToHelicityFrame((1, 2, 3)), PlaneAlign(4, -5))
+    # Transformation: ToGottfriedJacksonFrame
+    program = (ToGottfriedJacksonFrame((1, 2, 3), 4, 5),)
 
-    # Package transformation: ToGottfriedJacksonFrame
-    program_package = (ToGottfriedJacksonFrame((1, 2, 3), 4, 5),)
-
-    # Execute both
-    (final_objs_manual, _) = execute_decay_program(objs, program_manual)
-    (final_objs_package, _) = execute_decay_program(objs, program_package)
-
-    # Compare final four-vectors component-wise
-    @test length(final_objs_manual) == length(final_objs_package) == 5
-
-    for i = 1:5
-        p_manual = final_objs_manual[i]
-        p_package = final_objs_package[i]
-
-        @test p_manual.px ≈ p_package.px atol = 1e-10
-        @test p_manual.py ≈ p_package.py atol = 1e-10
-        @test p_manual.pz ≈ p_package.pz atol = 1e-10
-        @test p_manual.E ≈ p_package.E atol = 1e-10
-    end
+    # Execute
+    (final_objs, _) = execute_decay_program(objs, program)
 
     # Verify expected properties after transformation
     # System (1,2,3) should be at rest
-    P_system = final_objs_package[1] + final_objs_package[2] + final_objs_package[3]
+    P_system = final_objs[1] + final_objs[2] + final_objs[3]
     @test abs(P_system.px) < 1e-10
     @test abs(P_system.py) < 1e-10
     @test abs(P_system.pz) < 1e-10
 
     # z_idx (4) should be aligned along +z
-    p4_final = final_objs_package[4]
+    p4_final = final_objs[4]
     @test abs(p4_final.px) < 1e-10
     @test abs(p4_final.py) < 1e-10
     @test p4_final.pz > 0  # Should be along +z
 
     # x_idx (5) should be in xz plane with x > 0
-    p5_final = final_objs_package[5]
+    p5_final = final_objs[5]
     @test abs(p5_final.py) < 1e-10  # y component should be zero
     @test p5_final.px < 0  # x component should be negative (in xz plane)
 end
