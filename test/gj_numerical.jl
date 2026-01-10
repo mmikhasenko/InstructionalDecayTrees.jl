@@ -23,22 +23,22 @@ using Test
 
     # Create four-vectors using M keyword argument
     # Index 1: pπ⁻ (bachelor)
-    p4π⁻ = FourVector(pπ⁻_p..., M=mπ)
+    p4π⁻ = FourVector(pπ⁻_p..., M = mπ)
 
     # Index 2: pπ⁰ (bachelor)
-    p4π⁰ = FourVector(pπ⁰_p..., M=mπ)
+    p4π⁰ = FourVector(pπ⁰_p..., M = mπ)
 
     # Index 3: sum of kπ⁻ + kπ⁰ + kπ⁺ (omega decay system)
-    k4π⁻ = FourVector(kπ⁻_p..., M=mπ)
-    k4π⁰ = FourVector(kπ⁰_p..., M=mπ)
-    k4π⁺ = FourVector(kπ⁺_p..., M=mπ)
+    k4π⁻ = FourVector(kπ⁻_p..., M = mπ)
+    k4π⁰ = FourVector(kπ⁰_p..., M = mπ)
+    k4π⁺ = FourVector(kπ⁺_p..., M = mπ)
     k4_sum = k4π⁻ + k4π⁰ + k4π⁺
 
     # Index 4: pb (beam π⁻)
-    p4b = FourVector(pb_p..., M=mπ)
+    p4b = FourVector(pb_p..., M = mπ)
 
     # Index 5: target proton at rest
-    p4t = FourVector(0.0, 0.0, 0.0; M=mp)
+    p4t = FourVector(0.0, 0.0, 0.0; M = mp)
 
     # Create tuple of objects: (pπ⁻, pπ⁰, k_sum, π⁻_beam, p_target)
     # Reaction: π⁻ p → ω(→π⁻π⁰π⁺) π⁻ π⁰ p'
@@ -108,22 +108,22 @@ end
 
     # Create four-vectors
     # Index 1: omega = sum of (pi-_0, pi0_1, pi+_2)
-    omega_pi⁻ = FourVector(omega_pi⁻_p..., M=mπ⁻)
-    omega_pi0 = FourVector(omega_pi0_1_p..., M=mπ0)
-    omega_pi⁺ = FourVector(omega_pi⁺_p..., M=mπ⁻)
+    omega_pi⁻ = FourVector(omega_pi⁻_p..., M = mπ⁻)
+    omega_pi0 = FourVector(omega_pi0_1_p..., M = mπ0)
+    omega_pi⁺ = FourVector(omega_pi⁺_p..., M = mπ⁻)
     omega_sum = omega_pi⁻ + omega_pi0 + omega_pi⁺
 
     # Index 2: bachelor pi- (pi-_3)
-    bachelor_pi⁻ = FourVector(bachelor_pi⁻_p..., M=mπ⁻)
+    bachelor_pi⁻ = FourVector(bachelor_pi⁻_p..., M = mπ⁻)
 
     # Index 3: bachelor pi0 (pi0_4)
-    bachelor_pi0 = FourVector(bachelor_pi0_p..., M=mπ0)
+    bachelor_pi0 = FourVector(bachelor_pi0_p..., M = mπ0)
 
     # Index 4: beam pi-
-    beam = FourVector(beam_p..., M=mπ⁻)
+    beam = FourVector(beam_p..., M = mπ⁻)
 
     # Index 5: target proton at rest
-    target = FourVector(0.0, 0.0, 0.0; M=mp)
+    target = FourVector(0.0, 0.0, 0.0; M = mp)
 
     # Create tuple of objects: (omega, pi-, pi0, beam, target)
     objs = (omega_sum, bachelor_pi⁻, bachelor_pi0, beam, target)
