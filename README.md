@@ -1,11 +1,12 @@
 # LazyDecayAngles.jl
 
-A lightweight, type-stable DSL for calculating kinematic variables in particle decay chains. It decouples the description of the decay topology (the "program") from the numerical execution.
+A lightweight, type-stable DSL for calculating kinematic variables in particle decay chains. It decouples the description of the decay topology from the numerical execution.
 
 ## Features
 - **Declarative:** Describe *what* to calculate (boosts, rotations, angles) without writing matrix algebra.
-- **Type Stable:** Programs are Tuples, results are NamedTuples. Fully inferable by the Julia compiler.
+- **Type Stable:** Instruction sequences are encoded as types, results are NamedTuples. Fully inferable by the Julia compiler.
 - **Generic:** The core logic is type-agnostic. Physics backend (currently `FourVectors.jl`) is modular.
+- **Unified API:** Single dispatch method `apply_decay_instruction` handles all instructions and sequences.
 
 ## Installation
 
@@ -32,22 +33,22 @@ p1 = FourVector(1.0, 0.0, 0.0; M=0.14)
 p2 = FourVector(-1.0, 0.0, 0.0; M=0.14)
 objs = (p1, p2) # Use a Tuple for type stability
 
-# 2. Define the program
+# 2. Define the instruction sequence (can be called "program" - it's just a tuple)
 program = (
     # Boost to rest frame of (1,2) - can use tuple, vector, or single index
     ToHelicityFrame((1, 2)),
     # Alternative: ToHelicityFrame([1, 2])
-    
+
     # Measure polar angle of particle 1 - single index
     MeasurePolar(:theta1, 1),
-    
+
     # Measure invariant mass of the pair - tuple of indices
     MeasureInvariant(:m12, (1, 2))
     # Alternative: MeasureInvariant(:m12, [1, 2])
 )
 
-# 3. Execute
-(final_objs, results) = execute_decay_program(objs, program)
+# 3. Execute using the universal dispatch method
+(final_objs, results) = apply_decay_instruction(program, objs)
 
 # Access results
 println(results.theta1)
@@ -60,20 +61,24 @@ println(results.m12)
 using LazyDecayAngles
 using FourVectors
 
-# Create a composite instruction from existing instructions
+# Tuples are automatically wrapped in CompositeInstruction internally
+# You can use tuples directly (convenient):
+program = (
+    ToHelicityFrame((1, 2, 3)),
+    PlaneAlign(4, 5),
+    MeasureSpherical(:theta, :phi, (2, 3))
+)
+
+# Or explicitly create CompositeInstruction (enables type-level dispatch):
 composite = CompositeInstruction((
     ToHelicityFrame((1, 2, 3)),
     PlaneAlign(4, 5)
 ))
 
-# Or use the built-in ToGottfriedJacksonFrame
-program = (
-    ToGottfriedJacksonFrame((1, 2, 3), 4, 5),
-    MeasureSpherical(:theta, :phi, (2, 3))
-)
-
+# Both work with apply_decay_instruction - the universal dispatch method
 objs = (p1, p2, p3, p4, p5)
-(final_objs, results) = execute_decay_program(objs, program)
+(final_objs, results) = apply_decay_instruction(program, objs)
+(final_objs2, results2) = apply_decay_instruction(composite, objs)
 ```
 
 ### Advanced Usage
@@ -124,8 +129,14 @@ MeasureSpherical(:theta, :phi, (1, -2))
 - `PlaneAlign(z_idx, x_idx)`: Rotate the frame to align `z_idx` along +z and `x_idx` in the xz plane. Both `z_idx` and `x_idx` can be single indices, tuples, or vectors. Negative indices imply taking the vector with a minus sign. Usually used after `ToHelicityFrame`.
 - `ToGottfriedJacksonFrame(system_indices, beam_idx, target_idx)`: Composite transformation that combines `ToHelicityFrame(system_indices)` followed by `PlaneAlign(beam_idx, -target_idx)`. This implements the Gottfried-Jackson frame transformation commonly used in hadronic physics analyses. The `beam_idx` is aligned along +z, and `target_idx` (always positive) is automatically negated when passed to `PlaneAlign` to align it in the xz plane with negative Px, following the standard GJ definition. All parameters accept single indices, tuples, or vectors.
 
+### Execution
+- `apply_decay_instruction(instr, objs)`: Universal dispatch method that executes any instruction or sequence:
+  - Single `AbstractInstruction`: Executed directly
+  - `CompositeInstruction`: Executed with nested recursive execution
+  - `Tuple` of instructions: Automatically wrapped in `CompositeInstruction` internally
+
 ### Composite Instructions
-- `CompositeInstruction(instructions)`: General-purpose composite instruction that holds a sequence of instructions. The type parameter encodes the instruction sequence, enabling type-level dispatch. Useful for creating reusable transformation patterns.
+- `CompositeInstruction(instructions)`: Holds a sequence of instructions. The type parameter encodes the full instruction sequence, enabling type-level dispatch. Tuples are automatically converted to `CompositeInstruction` when passed to `apply_decay_instruction`, but you can create them explicitly for type-level dispatch or reusable patterns.
 
 ### Measurement Instructions
 - `MeasurePolar(tag, idx)`: Store polar angle. `idx` can be a single index, tuple, or vector.
