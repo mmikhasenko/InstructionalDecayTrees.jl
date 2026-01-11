@@ -85,10 +85,6 @@ objs = (p1, p2, p3, p4, p5)
 (final_objs2, results2) = apply_decay_instruction(composite, objs)
 ```
 
-### Advanced Usage
-
-See [docs/complex_topology.jl](docs/complex_topology.jl) for a runnable example of analyzing a $B_p \to (D K) + (D^0 \pi)$ decay chain.
-
 ## Index Specification
 
 All instructions that accept indices support a unified, flexible index specification system:
