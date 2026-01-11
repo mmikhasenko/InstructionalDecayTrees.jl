@@ -1,6 +1,10 @@
 # InstructionalDecayTrees.jl
 
+[![PRD](https://img.shields.io/badge/Phys.Rev.D-111%20(2025)%205%2C%20056015-blue)](https://inspirehep.net/literature/2827198)
+
 A lightweight, type-stable DSL for calculating kinematic variables in particle decay chains. It decouples the description of the decay topology from the numerical execution.
+
+**Note:** For detailed explanations of notations and conventions, see the [research paper](https://inspirehep.net/literature/2827198).
 
 ## Features
 - **Declarative:** Describe *what* to calculate (boosts, rotations, angles) without writing matrix algebra.
