@@ -1,4 +1,4 @@
-using LazyDecayAngles
+using InstructionalDecayTrees
 using FourVectors
 using Test
 
@@ -54,7 +54,7 @@ program = (
     ToHelicityFrame((4,)),
 )
 
-@testset "LazyDecayAngles Execution" begin
+@testset "InstructionalDecayTrees Execution" begin
     @info "Starting execution..."
     (final_objs, results) = execute_decay_program(objs, program)
 

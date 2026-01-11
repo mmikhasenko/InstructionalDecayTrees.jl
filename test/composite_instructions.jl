@@ -1,4 +1,4 @@
-using LazyDecayAngles
+using InstructionalDecayTrees
 using Test
 
 @testset "CompositeInstruction" begin

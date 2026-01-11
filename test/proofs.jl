@@ -1,4 +1,4 @@
-using LazyDecayAngles
+using InstructionalDecayTrees
 using FourVectors
 using Test
 using LinearAlgebra
