@@ -1,4 +1,4 @@
-module LazyDecayAngles
+module InstructionalDecayTrees
 
 export AbstractInstruction,
     ToHelicityFrame,
@@ -19,4 +19,4 @@ include("composite_instructions.jl")
 include("execution.jl")
 include("backend_fourvectors.jl")
 
-end # module LazyDecayAngles
+end # module InstructionalDecayTrees

@@ -1,4 +1,4 @@
-# LazyDecayAngles.jl
+# InstructionalDecayTrees.jl
 
 A lightweight, type-stable DSL for calculating kinematic variables in particle decay chains. It decouples the description of the decay topology from the numerical execution.
 
@@ -12,9 +12,9 @@ A lightweight, type-stable DSL for calculating kinematic variables in particle d
 
 This package depends on `FourVectors.jl`, which is an unregistered package from GitHub:
 
-- **If `Manifest.toml` is present** (as in this repository): The unregistered package will be automatically installed when you add `LazyDecayAngles.jl` to your environment, as the manifest includes the exact dependency information.
+- **If `Manifest.toml` is present** (as in this repository): The unregistered package will be automatically installed when you add `InstructionalDecayTrees.jl` to your environment, as the manifest includes the exact dependency information.
 
-- **If using a different setup without the manifest**: You need to manually install `FourVectors.jl` before adding `LazyDecayAngles.jl`:
+- **If using a different setup without the manifest**: You need to manually install `FourVectors.jl` before adding `InstructionalDecayTrees.jl`:
   ```julia
   using Pkg
   Pkg.add(url="https://github.com/mmikhasenko/FourVectors.jl.git")
@@ -25,7 +25,7 @@ This package depends on `FourVectors.jl`, which is an unregistered package from 
 ### Basic Example
 
 ```julia
-using LazyDecayAngles
+using InstructionalDecayTrees
 using FourVectors
 
 # 1. Define your input objects
@@ -58,7 +58,7 @@ println(results.m12)
 ### Composite Instructions Example
 
 ```julia
-using LazyDecayAngles
+using InstructionalDecayTrees
 using FourVectors
 
 # Tuples are automatically wrapped in CompositeInstruction internally
