@@ -32,3 +32,45 @@ end
     @test gj1.beam_idx == gj2.beam_idx == (4,)
     @test gj1.target_idx == gj2.target_idx == (5,)
 end
+
+@testset "Nested CompositeInstruction Recursive Execution" begin
+    using FourVectors
+
+    # Create test vectors
+    p1 = FourVector(1.0, 0.0, 0.0; E = 2.0)
+    p2 = FourVector(-1.0, 0.0, 0.0; E = 2.0)
+    p3 = FourVector(0.0, 1.0, 0.0; E = 2.0)
+    objs = (p1, p2, p3)
+
+    # Create nested composite instructions
+    inner = CompositeInstruction((
+        ToHelicityFrame((1, 2)),
+        PlaneAlign(1, 2),
+    ))
+
+    outer = CompositeInstruction((
+        inner,  # Nested CompositeInstruction
+        MeasurePolar(:theta, 3),
+    ))
+
+    # Execute and verify nested recursive execution works (complexity is encapsulated)
+    (final_objs, results) = execute_decay_program(objs, outer)
+
+    @test haskey(results, :theta)
+    @test results.theta isa Real
+
+    # Test that execute_decay_program accepts CompositeInstruction directly
+    (final_objs2, results2) = execute_decay_program(objs, outer)
+    @test results2.theta == results.theta
+
+    # Test deeply nested composites
+    deeply_nested = CompositeInstruction((
+        CompositeInstruction((
+            ToHelicityFrame((1, 2)),
+        )),
+        MeasurePolar(:theta_deep, 3),
+    ))
+
+    (_, results_deep) = execute_decay_program(objs, deeply_nested)
+    @test haskey(results_deep, :theta_deep)
+end

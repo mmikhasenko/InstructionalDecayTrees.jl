@@ -11,8 +11,8 @@ export AbstractInstruction,
     MeasureMassCosThetaPhi,
     MeasureCosThetaPhi,
     MeasureInvariant,
-    execute_decay_program,
-    apply_decay_instruction
+    apply_decay_instruction,
+    execute_decay_program  # Deprecated, use apply_decay_instruction instead
 
 include("instructions.jl")
 include("composite_instructions.jl")
