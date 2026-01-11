@@ -60,10 +60,8 @@ function apply_decay_instruction(instr::PlaneAlign, objs)
     return (final_objs, (;))
 end
 
-function apply_decay_instruction(instr::CompositeInstruction, objs)
-    # Reuse existing program execution logic
-    return execute_decay_program(objs, instr.instructions)
-end
+# CompositeInstruction handling is now in execution.jl
+# This method is no longer needed since apply_decay_instruction is defined there
 
 function apply_decay_instruction(instr::ToGottfriedJacksonFrame, objs)
     # Step 1: Apply ToHelicityFrame (reuses existing implementation)
