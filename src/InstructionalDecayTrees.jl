@@ -6,6 +6,13 @@ export AbstractInstruction,
     PlaneAlign,
     ToGottfriedJacksonFrame,
     CompositeInstruction,
+    LorentzTracker,
+    TrackedState,
+    init_tracked_state,
+    relative_tracker,
+    decode_lorentz_helicity,
+    wigner_zyz,
+    compare_instruction_paths,
     MeasurePolar,
     MeasureSpherical,
     MeasureMassCosThetaPhi,
@@ -18,5 +25,6 @@ include("instructions.jl")
 include("composite_instructions.jl")
 include("execution.jl")
 include("backend_fourvectors.jl")
+include("tracking.jl")
 
 end # module InstructionalDecayTrees

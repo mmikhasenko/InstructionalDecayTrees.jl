@@ -135,6 +135,17 @@ MeasureSpherical(:theta, :phi, (1, -2))
   - `CompositeInstruction`: Executed with nested recursive execution
   - `Tuple` of instructions: Automatically wrapped in `CompositeInstruction` internally
 
+### Tracked Lorentz Execution
+- `TrackedState(objs, tracker)`: State object carrying both transformed objects and accumulated Lorentz tracker.
+- `init_tracked_state(objs)`: Convenience constructor with identity tracker.
+- `LorentzTracker`: Stores accumulated 4x4 Lorentz matrix in `(E, px, py, pz)` basis.
+- `compare_instruction_paths(path_reference, path_other, objs)`: Executes both paths and returns:
+  - `tracker1`, `tracker2`
+  - `relative = tracker2 * inv(tracker1)` (other relative to reference)
+  - `results1`, `results2`, `final_objs1`, `final_objs2`
+- `decode_lorentz_helicity(tracker)`: Decode `(ϕ, θ, ξ, ϕ_rf, θ_rf, ψ_rf)` in helicity convention.
+- `wigner_zyz(tracker)`: Extract `(ϕ_rf, θ_rf, ψ_rf)` from full Lorentz decode (no pure-rotation shortcut).
+
 ### Composite Instructions
 - `CompositeInstruction(instructions)`: Holds a sequence of instructions. The type parameter encodes the full instruction sequence, enabling type-level dispatch. Tuples are automatically converted to `CompositeInstruction` when passed to `apply_decay_instruction`, but you can create them explicitly for type-level dispatch or reusable patterns.
 
@@ -144,3 +155,17 @@ MeasureSpherical(:theta, :phi, (1, -2))
 - `MeasureCosThetaPhi(tag, indices)`: Store (cosθ, ϕ) of sum of `indices` as a NamedTuple. Accepts single index, tuple, or vector.
 - `MeasureMassCosThetaPhi(tag, indices)`: Store (m, cosθ, ϕ) of sum of `indices` as a NamedTuple. Accepts single index, tuple, or vector.
 - `MeasureInvariant(tag, indices)`: Store invariant mass squared of sum of `indices`. Accepts single index, tuple, or vector.
+
+## Cross-Check Fixtures (Python ↔ Julia)
+
+This repository includes a JSON-based cross-check pipeline against `decayangle` in helicity convention:
+
+- Fixture file: `test/fixtures/decayangle_crosscheck.json`
+- Generator script: `test/generate_decayangle_fixture.py`
+- Julia validator: `test/crosscheck_json.jl`
+
+The fixture currently contains deterministic 4-body and 5-body topology comparisons, including:
+- per-target path steps (mapped to `ToHelicityFrame` / `ToHelicityFrameParticle2`),
+- decoded Lorentz parameters for both paths,
+- relative 4x4 matrix,
+- relative Wigner angles.
