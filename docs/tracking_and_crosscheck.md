@@ -4,6 +4,9 @@
 
 This package now supports tracked execution of instruction paths, so Lorentz transformations can be compared directly between two paths (reference vs other), and Wigner angles can be extracted in helicity convention.
 
+Algebra details and matrix formulas:
+- `docs/lorentz_tracker_math.md`
+
 ## Tracked Execution
 
 ### Types
