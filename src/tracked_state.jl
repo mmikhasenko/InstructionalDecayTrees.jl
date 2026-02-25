@@ -89,29 +89,20 @@ function apply_decay_instruction(instr::ToGottfriedJacksonFrame, state::TrackedS
     return apply_decay_instruction(plane_instr, after_boost)
 end
 
-function apply_decay_instruction(instr::MeasurePolar, state::TrackedState)
+function _apply_measure_instruction(instr::AbstractMeasureInstruction, state::TrackedState)
     (objs_after, results) = apply_decay_instruction(instr, state.objs)
     return (TrackedState(objs_after, state.tracker), results)
 end
 
-function apply_decay_instruction(instr::MeasureSpherical, state::TrackedState)
-    (objs_after, results) = apply_decay_instruction(instr, state.objs)
-    return (TrackedState(objs_after, state.tracker), results)
-end
-
-function apply_decay_instruction(instr::MeasureMassCosThetaPhi, state::TrackedState)
-    (objs_after, results) = apply_decay_instruction(instr, state.objs)
-    return (TrackedState(objs_after, state.tracker), results)
-end
-
-function apply_decay_instruction(instr::MeasureCosThetaPhi, state::TrackedState)
-    (objs_after, results) = apply_decay_instruction(instr, state.objs)
-    return (TrackedState(objs_after, state.tracker), results)
-end
-
-function apply_decay_instruction(instr::MeasureInvariant, state::TrackedState)
-    (objs_after, results) = apply_decay_instruction(instr, state.objs)
-    return (TrackedState(objs_after, state.tracker), results)
+for T in (
+    :MeasurePolar,
+    :MeasureSpherical,
+    :MeasureMassCosThetaPhi,
+    :MeasureCosThetaPhi,
+    :MeasureInvariant,
+)
+    @eval apply_decay_instruction(instr::$T, state::TrackedState) =
+        _apply_measure_instruction(instr, state)
 end
 
 """

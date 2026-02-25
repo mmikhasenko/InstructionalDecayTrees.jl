@@ -1,4 +1,5 @@
 abstract type AbstractInstruction end
+abstract type AbstractMeasureInstruction <: AbstractInstruction end
 
 # Type alias for flexible index specification (for constructors)
 const IndexSpec = Union{Int,Tuple{Vararg{Int}},Vector{Int}}
@@ -86,7 +87,7 @@ struct ToGottfriedJacksonFrame{Tsys<:Tuple,Tbeam<:Tuple,Ttarget<:Tuple} <:
     end
 end
 
-struct MeasurePolar{T<:Tuple} <: AbstractInstruction
+struct MeasurePolar{T<:Tuple} <: AbstractMeasureInstruction
     tag::Symbol
     idx::T
     # Optional: frame reference could be added here later
@@ -103,7 +104,7 @@ end
 
 Measures and stores both the polar angle (theta) and azimuthal angle (phi) of the sum of objects at `indices`.
 """
-struct MeasureSpherical{T<:Tuple} <: AbstractInstruction
+struct MeasureSpherical{T<:Tuple} <: AbstractMeasureInstruction
     theta_tag::Symbol
     phi_tag::Symbol
     indices::T
@@ -118,7 +119,7 @@ end
 MeasureSpherical(theta_tag::Symbol, phi_tag::Symbol, indices::Int...) =
     MeasureSpherical(theta_tag, phi_tag, indices)
 
-struct MeasureInvariant{T<:Tuple} <: AbstractInstruction
+struct MeasureInvariant{T<:Tuple} <: AbstractMeasureInstruction
     tag::Symbol
     indices::T
 
@@ -138,7 +139,7 @@ Measures and stores a NamedTuple (m, cosθ, ϕ) under the single `tag`.
 The mass is the invariant mass of the sum of `indices`.
 The angles (cosθ, ϕ) are measured for the sum of `indices` in the current frame.
 """
-struct MeasureMassCosThetaPhi{T<:Tuple} <: AbstractInstruction
+struct MeasureMassCosThetaPhi{T<:Tuple} <: AbstractMeasureInstruction
     tag::Symbol
     indices::T
 
@@ -157,7 +158,7 @@ MeasureMassCosThetaPhi(tag::Symbol, indices::Int...) = MeasureMassCosThetaPhi(ta
 Measures and stores a NamedTuple (cosθ, ϕ) under the single `tag`.
 The angles (cosθ, ϕ) are measured for the sum of `indices` in the current frame.
 """
-struct MeasureCosThetaPhi{T<:Tuple} <: AbstractInstruction
+struct MeasureCosThetaPhi{T<:Tuple} <: AbstractMeasureInstruction
     tag::Symbol
     indices::T
 
