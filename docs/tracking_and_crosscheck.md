@@ -26,7 +26,8 @@ Algebra details and matrix formulas:
 - Helicity path composition.
 - Relative transform: `Δ = other * inv(reference)`.
 - Wigner angles are extracted from full Lorentz decode in ZYZ order, not by assuming a pure spatial rotation block.
-- Current decode path uses `Λ`; strict SU(2)-branch phase decoding from `U` is staged and covered by expected-broken tests.
+- For pure-rotation relative transforms (`ξ ≈ 0`), SU(2) is used to resolve the `2π` branch of `ψ` on `[-π, 3π)`.
+- For generic boosted transforms, decode uses `Λ` branch selection.
 
 ## Python Cross-Check Workflow
 

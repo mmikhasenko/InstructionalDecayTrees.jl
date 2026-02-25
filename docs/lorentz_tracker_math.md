@@ -133,7 +133,7 @@ U_{\mathrm{rot}}=U_{R_z}(\phi_{\mathrm{rf}})\,U_{R_y}(\theta_{\mathrm{rf}})\,U_{
 
 Because \(U\) is single-valued over \(4\pi\), \(\psi_{\mathrm{rf}}\) can be selected on a \(4\pi\)-length interval (here \([-\pi,3\pi)\)) consistently, instead of modulo \(2\pi\) only.
 
-In this PR stage:
+In the current implementation:
 - SU2 is accumulated in the tracker,
-- public decode currently uses \(\Lambda\)-based decode,
-- strict SU2-branch-resolved angle checks are documented by expected-broken tests and can be enabled once decode is switched to the \(U\)-aware branch selection.
+- for pure rotations (\(\xi \approx 0\)), \(U\) is used to choose the \(\psi\) branch (\(\psi\) vs \(\psi+2\pi\)),
+- for generic boosted transforms, decoding remains \(\Lambda\)-branch based.

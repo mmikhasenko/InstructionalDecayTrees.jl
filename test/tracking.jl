@@ -98,20 +98,23 @@ end
     ang = wigner_zyz(cmp.relative)
     @test ang.ϕ ≈ -3.1181030111491173 atol = 5e-10
     @test ang.θ ≈ 0.38580543795548133 atol = 5e-10
-    @test ang.ψ ≈ 3.14149436788573 atol = 5e-10
+    @test ang.ψ ≈ 9.42467967506533 atol = 5e-10
 end
 
-@testset "Known limitation: decode does not yet use SU2 branch" begin
-    # Tracker stores SU2, but decode_lorentz_helicity/wigner_zyz currently decode from Λ.
-    # So a pure spinor sign flip (U -> -U) is still invisible to angle decode.
-    ref = LorentzTracker(Float64)
-    other = LorentzTracker(Matrix{Float64}(I, 4, 4), -Matrix{ComplexF64}(I, 2, 2))
-    rel = relative_tracker(ref, other)
-    @test rel.Λ ≈ Matrix{Float64}(I, 4, 4) atol = 1e-12
-    @test rel.U ≈ -Matrix{ComplexF64}(I, 2, 2) atol = 1e-12
+@testset "SU2 branch resolves 2π phase" begin
+    # Non-singular ZYZ rotation with explicit spinor sign flip.
+    # Same Λ, opposite U branch should force ψ to the shifted 2π branch.
+    ϕ0 = 0.4
+    θ0 = 1.1
+    ψ0 = 0.7
+    Λ = InstructionalDecayTrees._rz_xyze(ϕ0) *
+        InstructionalDecayTrees._ry_xyze(θ0) *
+        InstructionalDecayTrees._rz_xyze(ψ0)
+    U = -InstructionalDecayTrees._build_su2(0.0, 0.0, 0.0, ϕ0, θ0, ψ0)
+    t = LorentzTracker(Λ, U)
 
-    # This intentionally documents the missing capability:
-    # with SU2-branch-aware decode, this relative transform would expose a 2π branch.
-    ang = wigner_zyz(rel)
-    @test_broken abs(ang.ϕ - 2π) < 1e-12 || abs(ang.ψ - 2π) < 1e-12
+    ang = wigner_zyz(t)
+    @test ang.ϕ ≈ ϕ0 atol = 1e-12
+    @test ang.θ ≈ θ0 atol = 1e-12
+    @test ang.ψ ≈ (ψ0 + 2π) atol = 1e-12
 end

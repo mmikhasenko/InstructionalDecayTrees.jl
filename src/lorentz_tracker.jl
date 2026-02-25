@@ -38,13 +38,22 @@ Returns `(ϕ, θ, ξ, ϕ_rf, θ_rf, ψ_rf)`.
 """
 function decode_lorentz_helicity(t::LorentzTracker; atol::Real=1e-10)
     d = _decode_lorentz_helicity_zyz_xyze(t.Λ; atol = atol)
+    ψ_rf = d.ψ_rf
+    # SU2 branch resolution is robust for pure-rotation relative transforms (ξ ≈ 0).
+    # For generic boosted transforms we keep the Λ-decoded branch.
+    if abs(d.ξ) < atol
+        U_pred = _build_su2(d.ϕ, d.θ, d.ξ, d.ϕ_rf, d.θ_rf, d.ψ_rf)
+        err_plus = sum(abs2, U_pred .- t.U)
+        err_minus = sum(abs2, U_pred .+ t.U)
+        ψ_rf = err_minus + atol < err_plus ? d.ψ_rf + 2π : d.ψ_rf
+    end
     return (
         ϕ = d.ϕ,
         θ = d.θ,
         ξ = d.ξ,
         ϕ_rf = d.ϕ_rf,
         θ_rf = d.θ_rf,
-        ψ_rf = normalize_psi(d.ψ_rf),
+        ψ_rf = normalize_psi(ψ_rf),
     )
 end
 

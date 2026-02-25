@@ -22,7 +22,7 @@ function _objs_from_momenta(momenta_xyze, n::Int)
 end
 
 _wrapdiff(a, b) = mod(a - b + π, 2π) - π
-_normpsi(ψ) = mod(ψ + π, 4π) - π
+_wrapdiff4(a, b) = mod(a - b + 2π, 4π) - 2π
 
 @testset "JSON cross-check against decayangle (helicity)" begin
     fixture_path = joinpath(@__DIR__, "fixtures", "decayangle_crosscheck.json")
@@ -30,7 +30,7 @@ _normpsi(ψ) = mod(ψ + π, 4π) - π
     @test String(fixture.convention) == "helicity"
     # Ensure fixture exercises extended-angle branch handling.
     @test any(abs(t.relative_wigner[3]) > π for c in fixture.cases for t in c.targets)
-    strict_psi_mismatches = 0
+    strict_relative_psi_mismatches = 0
 
     for case in fixture.cases
         n = Int(case.n)
@@ -50,7 +50,7 @@ _normpsi(ψ) = mod(ψ + π, 4π) - π
                 @test abs(_wrapdiff(w.ϕ, w_py[1])) < 2e-9
                 @test abs(_wrapdiff(w.θ, w_py[2])) < 2e-9
                 @test abs(_wrapdiff(w.ψ, w_py[3])) < 2e-9
-                strict_psi_mismatches += abs(_normpsi(w.ψ) - _normpsi(w_py[3])) < 2e-9 ? 0 : 1
+                strict_relative_psi_mismatches += abs(_wrapdiff4(w.ψ, w_py[3])) < 2e-9 ? 0 : 1
 
                 dref = decode_lorentz_helicity(cmp.tracker1)
                 dother = decode_lorentz_helicity(cmp.tracker2)
@@ -63,20 +63,15 @@ _normpsi(ψ) = mod(ψ + π, 4π) - π
                 @test abs(_wrapdiff(dref.ϕ_rf, dref_py[4])) < 2e-9
                 @test abs(_wrapdiff(dref.θ_rf, dref_py[5])) < 2e-9
                 @test abs(_wrapdiff(dref.ψ_rf, dref_py[6])) < 2e-9
-                strict_psi_mismatches += abs(_normpsi(dref.ψ_rf) - _normpsi(dref_py[6])) < 2e-9 ? 0 : 1
-
                 @test abs(_wrapdiff(dother.ϕ, dother_py[1])) < 2e-9
                 @test abs(_wrapdiff(dother.θ, dother_py[2])) < 2e-9
                 @test abs(dother.ξ - dother_py[3]) < 2e-9
                 @test abs(_wrapdiff(dother.ϕ_rf, dother_py[4])) < 2e-9
                 @test abs(_wrapdiff(dother.θ_rf, dother_py[5])) < 2e-9
                 @test abs(_wrapdiff(dother.ψ_rf, dother_py[6])) < 2e-9
-                strict_psi_mismatches += abs(_normpsi(dother.ψ_rf) - _normpsi(dother_py[6])) < 2e-9 ? 0 : 1
             end
         end
     end
 
-    # Expected until SU2 branch tracking is used for decode:
-    # strict ψ-interval matching may differ by 2π while wrapped matching succeeds.
-    @test_broken strict_psi_mismatches == 0
+    @test strict_relative_psi_mismatches == 0
 end
