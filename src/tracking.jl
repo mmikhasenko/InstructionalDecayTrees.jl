@@ -7,11 +7,17 @@ using FourVectors
 Tracks an accumulated Lorentz transformation matrix `Λ` acting on column vectors
 ordered as `(px, py, pz, E)`.
 """
-struct LorentzTracker{T<:AbstractMatrix}
-    Λ::T
+struct LorentzTracker{T<:Real,TM4<:AbstractMatrix{T},TM2<:AbstractMatrix{Complex{T}}}
+    Λ::TM4
+    U::TM2
 end
 
-LorentzTracker(::Type{T}=Float64) where {T<:Real} = LorentzTracker(Matrix{T}(I, 4, 4))
+function LorentzTracker(::Type{T}=Float64) where {T<:Real}
+    return LorentzTracker{T,Matrix{T},Matrix{Complex{T}}}(
+        Matrix{T}(I, 4, 4),
+        Matrix{Complex{T}}(I, 2, 2),
+    )
+end
 
 """
     TrackedState(objs, tracker)
@@ -26,8 +32,8 @@ end
 
 init_tracked_state(objs; T::Type{<:Real}=Float64) = TrackedState(objs, LorentzTracker(T))
 
-Base.inv(t::LorentzTracker) = LorentzTracker(inv(t.Λ))
-Base.:*(a::LorentzTracker, b::LorentzTracker) = LorentzTracker(a.Λ * b.Λ)
+Base.inv(t::LorentzTracker) = LorentzTracker(inv(t.Λ), inv(t.U))
+Base.:*(a::LorentzTracker, b::LorentzTracker) = LorentzTracker(a.Λ * b.Λ, a.U * b.U)
 
 """
     relative_tracker(reference, other)
@@ -84,6 +90,51 @@ function _decode_rotation_zyz_xyze(R::AbstractMatrix)
     return (ϕ = ϕ, θ = θ, ψ = ψ)
 end
 
+function _su2_rz(θ::Real)
+    h = θ / 2
+    Tc = Complex{typeof(float(h))}
+    return Tc[
+        cis(-h) 0
+        0 cis(h)
+    ]
+end
+
+function _su2_ry(θ::Real)
+    h = θ / 2
+    c = cos(h)
+    s = sin(h)
+    Tc = Complex{typeof(float(c))}
+    return Tc[
+        c -s
+        s c
+    ]
+end
+
+function _su2_bz(ξ::Real)
+    h = ξ / 2
+    Tc = Complex{typeof(float(h))}
+    return Tc[
+        exp(h) 0
+        0 exp(-h)
+    ]
+end
+
+_build_su2(ϕ, θ, ξ, ϕ_rf, θ_rf, ψ_rf) =
+    _su2_rz(ϕ) * _su2_ry(θ) * _su2_bz(ξ) *
+    _su2_rz(ϕ_rf) * _su2_ry(θ_rf) * _su2_rz(ψ_rf)
+
+function _decode_su2_rotation(U::AbstractMatrix)
+    cosβ = real(U[1, 1] * U[2, 2] + U[1, 2] * U[2, 1])
+    β = acos(clamp(cosβ, -1.0, 1.0))
+    α_plus_γ = angle(U[2, 2])
+    α_minus_γ = -angle(U[2, 1])
+    α = α_plus_γ + α_minus_γ
+    γ = α_plus_γ - α_minus_γ
+    return (ϕ = γ, θ = β, ψ = α)
+end
+
+normalize_psi(ψ::Real) = mod(ψ + π, 4π) - π
+
 function _decode_boost_xyze(M::AbstractMatrix; atol::Real=1e-10)
     # In (px,py,pz,E) basis, boosting the rest vector [0,0,0,1]
     # corresponds to taking the fourth column.
@@ -125,7 +176,8 @@ Decode full Lorentz parameters in helicity convention from a tracked transform.
 Returns `(ϕ, θ, ξ, ϕ_rf, θ_rf, ψ_rf)`.
 """
 function decode_lorentz_helicity(t::LorentzTracker; atol::Real=1e-10)
-    return _decode_lorentz_helicity_zyz_xyze(t.Λ; atol = atol)
+    d = _decode_lorentz_helicity_zyz_xyze(t.Λ; atol = atol)
+    return (ϕ = d.ϕ, θ = d.θ, ξ = d.ξ, ϕ_rf = d.ϕ_rf, θ_rf = d.θ_rf, ψ_rf = normalize_psi(d.ψ_rf))
 end
 
 """
@@ -160,20 +212,28 @@ function _step_matrix(transform, ::Type{T}) where {T<:Real}
     return M
 end
 
-function _apply_step_with_tracking(state::TrackedState, transform)
+function _apply_step_with_tracking(state::TrackedState, transform; U_step=nothing)
     new_objs = map(transform, state.objs)
     Tobj = typeof(first(state.objs).px)
     M_step = _step_matrix(transform, Tobj)
+    if U_step === nothing
+        d = _decode_lorentz_helicity_zyz_xyze(M_step)
+        U_step = _build_su2(d.ϕ, d.θ, d.ξ, d.ϕ_rf, d.θ_rf, d.ψ_rf)
+    end
     # Tracking is generic: infer the linear map by transforming basis vectors
     # and left-compose with the previously accumulated map.
-    new_tracker = LorentzTracker(M_step * state.tracker.Λ)
+    new_tracker = LorentzTracker(M_step * state.tracker.Λ, U_step * state.tracker.U)
     return TrackedState(new_objs, new_tracker)
 end
 
 function apply_decay_instruction(instr::ToHelicityFrame, state::TrackedState)
     P_tot = get_fourvector(state.objs, instr.indices)
+    ϕ = azimuthal_angle(P_tot)
+    θ = polar_angle(P_tot)
+    γ = boost_gamma(P_tot)
     transform = p -> transform_to_cmf(p, P_tot)
-    return (_apply_step_with_tracking(state, transform), (;))
+    U_step = _su2_bz(-γ) * _su2_ry(-θ) * _su2_rz(-ϕ)
+    return (_apply_step_with_tracking(state, transform; U_step = U_step), (;))
 end
 
 function apply_decay_instruction(instr::ToHelicityFrameParticle2, state::TrackedState)
@@ -185,7 +245,8 @@ function apply_decay_instruction(instr::ToHelicityFrameParticle2, state::Tracked
     γ = boost_gamma(P_tot)
 
     transform = p -> p |> Rz(-ϕ_inv) |> Ry(-θ_inv) |> Ry(-π) |> Bz(-γ)
-    return (_apply_step_with_tracking(state, transform), (;))
+    U_step = _su2_bz(-γ) * _su2_ry(-π) * _su2_ry(-θ_inv) * _su2_rz(-ϕ_inv)
+    return (_apply_step_with_tracking(state, transform; U_step = U_step), (;))
 end
 
 function apply_decay_instruction(instr::PlaneAlign, state::TrackedState)
