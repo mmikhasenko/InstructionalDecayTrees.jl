@@ -51,8 +51,10 @@ function apply_decay_instruction(instr::ToHelicityFrame, state::TrackedState)
     ϕ = azimuthal_angle(P_tot)
     θ = polar_angle(P_tot)
     γ = boost_gamma(P_tot)
+    # FourVectors uses gamma-factor parameterization for Bz; SU2 boost uses rapidity.
+    ξ = acosh(γ)
     transform = p -> transform_to_cmf(p, P_tot)
-    U_step = _su2_bz(-γ) * _su2_ry(-θ) * _su2_rz(-ϕ)
+    U_step = _su2_bz(-ξ) * _su2_ry(-θ) * _su2_rz(-ϕ)
     return (_apply_step_with_tracking(state, transform; U_step = U_step), (;))
 end
 
@@ -63,9 +65,11 @@ function apply_decay_instruction(instr::ToHelicityFrameParticle2, state::Tracked
     ϕ_inv = azimuthal_angle(P_inv)
     θ_inv = polar_angle(P_inv)
     γ = boost_gamma(P_tot)
+    # FourVectors uses gamma-factor parameterization for Bz; SU2 boost uses rapidity.
+    ξ = acosh(γ)
 
     transform = p -> p |> Rz(-ϕ_inv) |> Ry(-θ_inv) |> Ry(-π) |> Bz(-γ)
-    U_step = _su2_bz(-γ) * _su2_ry(-π) * _su2_ry(-θ_inv) * _su2_rz(-ϕ_inv)
+    U_step = _su2_bz(-ξ) * _su2_ry(-π) * _su2_ry(-θ_inv) * _su2_rz(-ϕ_inv)
     return (_apply_step_with_tracking(state, transform; U_step = U_step), (;))
 end
 

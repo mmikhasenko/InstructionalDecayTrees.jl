@@ -61,6 +61,33 @@ end
     @test eltype(state.tracker.Λ) == Float32
 end
 
+@testset "Explicit SU2 step uses rapidity (not gamma)" begin
+    p1 = FourVector(0.25, -0.15, 0.30; M = 0.2)
+    p2 = FourVector(-0.10, 0.05, -0.20; M = 0.3)
+    p3 = FourVector(0.15, 0.10, -0.05; M = 0.25)
+    objs_local = (p1, p2, p3)
+    st = init_tracked_state(objs_local)
+
+    P_tot = p1 + p2 + p3
+    ϕ = azimuthal_angle(P_tot)
+    θ = polar_angle(P_tot)
+    γ = boost_gamma(P_tot)
+    ξ = acosh(γ)
+
+    transform = p -> transform_to_cmf(p, P_tot)
+    U_inferred = begin
+        M_step = InstructionalDecayTrees._step_matrix(transform, Float64)
+        d = InstructionalDecayTrees._decode_lorentz_helicity_zyz_xyze(M_step)
+        InstructionalDecayTrees._build_su2(d.ϕ, d.θ, d.ξ, d.ϕ_rf, d.θ_rf, d.ψ_rf)
+    end
+    U_explicit = InstructionalDecayTrees._su2_bz(-ξ) * InstructionalDecayTrees._su2_ry(-θ) *
+                 InstructionalDecayTrees._su2_rz(-ϕ)
+
+    err_plus = sum(abs2, U_explicit .- U_inferred)
+    err_minus = sum(abs2, U_explicit .+ U_inferred)
+    @test min(err_plus, err_minus) < 1e-10
+end
+
 @testset "Cross-check against decayangle (4-body, particle 3)" begin
     # Same four-vectors used in existing tests and Python cross-check harness.
     p1 = FourVector(-0.1467, 0.2235, -0.7847; E = 2.0452)
