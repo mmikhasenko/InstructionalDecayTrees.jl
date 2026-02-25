@@ -56,6 +56,9 @@ For each case (4-body and 5-body):
 Test file:
 - `test/crosscheck_json.jl`
 
+Reproducibility details (exact decayangle commit, Python environment, and generation commands):
+- `docs/decayangle_crosscheck.md`
+
 Checks:
 - path reconstruction from fixture steps,
 - relative matrix agreement (after basis conversion),
