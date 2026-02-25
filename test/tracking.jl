@@ -101,16 +101,17 @@ end
     @test ang.ψ ≈ 3.14149436788573 atol = 5e-10
 end
 
-@testset "Known limitation: SU2 2π phase is not tracked" begin
-    # Current tracker stores only 4x4 Lorentz/SO(3,1) information.
-    # A 2π spinor phase difference (U -> -U in SU2) is invisible in this representation.
+@testset "Known limitation: decode does not yet use SU2 branch" begin
+    # Tracker stores SU2, but decode_lorentz_helicity/wigner_zyz currently decode from Λ.
+    # So a pure spinor sign flip (U -> -U) is still invisible to angle decode.
     ref = LorentzTracker(Float64)
-    other = LorentzTracker(Float64)
+    other = LorentzTracker(Matrix{Float64}(I, 4, 4), -Matrix{ComplexF64}(I, 2, 2))
     rel = relative_tracker(ref, other)
     @test rel.Λ ≈ Matrix{Float64}(I, 4, 4) atol = 1e-12
+    @test rel.U ≈ -Matrix{ComplexF64}(I, 2, 2) atol = 1e-12
 
     # This intentionally documents the missing capability:
-    # with explicit SU2 tracking one could represent a 2π phase branch here.
+    # with SU2-branch-aware decode, this relative transform would expose a 2π branch.
     ang = wigner_zyz(rel)
     @test_broken abs(ang.ϕ - 2π) < 1e-12 || abs(ang.ψ - 2π) < 1e-12
 end

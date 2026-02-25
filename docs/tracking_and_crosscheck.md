@@ -7,7 +7,7 @@ This package now supports tracked execution of instruction paths, so Lorentz tra
 ## Tracked Execution
 
 ### Types
-- `LorentzTracker`: accumulated 4x4 Lorentz transformation in `(px, py, pz, E)` basis.
+- `LorentzTracker`: accumulated 4x4 Lorentz transformation `Λ` in `(px, py, pz, E)` basis plus accumulated SU(2) matrix `U`.
 - `TrackedState`: wraps `(objs, tracker)` and reuses existing `apply_decay_instruction` dispatch.
 
 ### Core helpers
@@ -23,6 +23,7 @@ This package now supports tracked execution of instruction paths, so Lorentz tra
 - Helicity path composition.
 - Relative transform: `Δ = other * inv(reference)`.
 - Wigner angles are extracted from full Lorentz decode in ZYZ order, not by assuming a pure spatial rotation block.
+- Current decode path uses `Λ`; strict SU(2)-branch phase decoding from `U` is staged and covered by expected-broken tests.
 
 ## Python Cross-Check Workflow
 
