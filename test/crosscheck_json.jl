@@ -27,6 +27,8 @@ _wrapdiff(a, b) = mod(a - b + π, 2π) - π
     fixture_path = joinpath(@__DIR__, "fixtures", "decayangle_crosscheck.json")
     fixture = JSON3.read(read(fixture_path, String))
     @test String(fixture.convention) == "helicity"
+    # Ensure fixture exercises extended-angle branch handling.
+    @test any(abs(t.relative_wigner[3]) > π for c in fixture.cases for t in c.targets)
 
     for case in fixture.cases
         n = Int(case.n)
