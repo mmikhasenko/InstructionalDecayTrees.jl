@@ -25,6 +25,8 @@ include("instructions.jl")
 include("composite_instructions.jl")
 include("execution.jl")
 include("backend_fourvectors.jl")
-include("tracking.jl")
+include("lorentz_math.jl")
+include("lorentz_tracker.jl")
+include("tracked_state.jl")
 
 end # module InstructionalDecayTrees
