@@ -36,7 +36,9 @@ include("lorentz_math.jl")
 export LorentzTracker,
     relative_tracker,
     decode_lorentz_helicity,
-    wigner_zyz
+    wigner_zyz,
+    wigner_zyz_so3,
+    wigner_zyz_su2
 include("lorentz_tracker.jl")
 
 # tracked_state.jl

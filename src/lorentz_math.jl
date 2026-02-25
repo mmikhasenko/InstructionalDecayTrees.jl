@@ -72,11 +72,38 @@ function _su2_bz(ξ::Real)
     ]
 end
 
+_wrap2pi(α::Real) = mod(α + π, 2π) - π
+
 _build_su2(ϕ, θ, ξ, ϕ_rf, θ_rf, ψ_rf) =
     _su2_rz(ϕ) * _su2_ry(θ) * _su2_bz(ξ) *
     _su2_rz(ϕ_rf) * _su2_ry(θ_rf) * _su2_rz(ψ_rf)
 
 normalize_psi(ψ::Real) = mod(ψ + π, 4π) - π
+
+function _decode_rotation_zyz_su2(U::AbstractMatrix; atol::Real=1e-12)
+    a = U[1, 1]
+    c = U[2, 1]
+    t = abs(a)
+    s = abs(c)
+    θ = 2 * atan(s, t)
+
+    if s < atol
+        # θ ≈ 0: only (ϕ + ψ) is fixed
+        ϕ = zero(real(θ))
+        ψ = 2 * angle(U[2, 2])
+    elseif t < atol
+        # θ ≈ π: only (ϕ - ψ) is fixed
+        ϕ = 2 * angle(c)
+        ψ = zero(real(θ))
+    else
+        σ = 2 * angle(U[2, 2]) # ϕ + ψ
+        δ = 2 * angle(c)       # ϕ - ψ
+        ϕ = (σ + δ) / 2
+        ψ = (σ - δ) / 2
+    end
+
+    return (ϕ = _wrap2pi(real(ϕ)), θ = real(θ), ψ = normalize_psi(real(ψ)))
+end
 
 function _decode_boost_xyze(M::AbstractMatrix; atol::Real=1e-10)
     # In (px,py,pz,E) basis, boosting the rest vector [0,0,0,1]

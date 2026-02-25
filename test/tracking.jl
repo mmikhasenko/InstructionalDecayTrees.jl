@@ -145,3 +145,27 @@ end
     @test ang.θ ≈ θ0 atol = 1e-12
     @test ang.ψ ≈ (ψ0 + 2π) atol = 1e-12
 end
+
+@testset "SO3 and SU2 Wigner decoders agree on pure rotations" begin
+    wrap2(a, b) = mod(a - b + π, 2π) - π
+    wrap4(a, b) = mod(a - b + 2π, 4π) - 2π
+    for (ϕ0, θ0, ψ0) in ((0.4, 1.1, 0.7), (-2.3, 0.9, 2.6), (1.9, 2.2, -1.4))
+        Λ = InstructionalDecayTrees._rz_xyze(ϕ0) *
+            InstructionalDecayTrees._ry_xyze(θ0) *
+            InstructionalDecayTrees._rz_xyze(ψ0)
+        U = InstructionalDecayTrees._build_su2(0.0, 0.0, 0.0, ϕ0, θ0, ψ0)
+        t = LorentzTracker(Λ, U)
+
+        a_so3 = wigner_zyz_so3(t)
+        a_su2 = wigner_zyz_su2(t)
+        a_mix = wigner_zyz(t)
+
+        @test abs(wrap2(a_so3.ϕ, a_su2.ϕ)) < 1e-12
+        @test abs(wrap2(a_so3.θ, a_su2.θ)) < 1e-12
+        @test abs(wrap4(a_so3.ψ, a_su2.ψ)) < 1e-12
+
+        @test abs(wrap2(a_mix.ϕ, a_su2.ϕ)) < 1e-12
+        @test abs(wrap2(a_mix.θ, a_su2.θ)) < 1e-12
+        @test abs(wrap4(a_mix.ψ, a_su2.ψ)) < 1e-12
+    end
+end
