@@ -76,16 +76,6 @@ _build_su2(ϕ, θ, ξ, ϕ_rf, θ_rf, ψ_rf) =
     _su2_rz(ϕ) * _su2_ry(θ) * _su2_bz(ξ) *
     _su2_rz(ϕ_rf) * _su2_ry(θ_rf) * _su2_rz(ψ_rf)
 
-function _decode_su2_rotation(U::AbstractMatrix)
-    cosβ = real(U[1, 1] * U[2, 2] + U[1, 2] * U[2, 1])
-    β = acos(clamp(cosβ, -1.0, 1.0))
-    α_plus_γ = angle(U[2, 2])
-    α_minus_γ = -angle(U[2, 1])
-    α = α_plus_γ + α_minus_γ
-    γ = α_plus_γ - α_minus_γ
-    return (ϕ = γ, θ = β, ψ = α)
-end
-
 normalize_psi(ψ::Real) = mod(ψ + π, 4π) - π
 
 function _decode_boost_xyze(M::AbstractMatrix; atol::Real=1e-10)
