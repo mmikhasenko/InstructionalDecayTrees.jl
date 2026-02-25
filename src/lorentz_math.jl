@@ -1,5 +1,3 @@
-using LinearAlgebra
-
 function _rz_xyze(θ::Real)
     c, s = cos(θ), sin(θ)
     z = zero(c)
