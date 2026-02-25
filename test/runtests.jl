@@ -10,6 +10,8 @@ include("composite_instructions.jl")
 
 # Include numerical tests
 include("gj_numerical.jl")
+include("tracking.jl")
+include("crosscheck_json.jl")
 
 # User provided vectors
 pD_vec = FourVector(-0.1467, 0.2235, -0.7847; E = 2.0452)   # 1
