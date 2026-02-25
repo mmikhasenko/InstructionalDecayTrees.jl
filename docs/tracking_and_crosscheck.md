@@ -29,6 +29,16 @@ Algebra details and matrix formulas:
 - For pure-rotation relative transforms (`ξ ≈ 0`), SU(2) is used to resolve the `2π` branch of `ψ` on `[-π, 3π)`.
 - For generic boosted transforms, decode uses `Λ` branch selection.
 
+## Corner Cases
+
+- `ξ ≈ 0` (pure rotation): this is the physically relevant Wigner-angle comparison case. Here SU(2) branch information is used to choose between `ψ` and `ψ + 2π`.
+- `ξ \not\approx 0` (boosted decode): per-path decode remains `Λ`-branch based; wrapped-angle agreement is validated against Python.
+- ZYZ singular points:
+  - `θ ≈ 0`: only `(ϕ + ψ)` is physically fixed.
+  - `θ ≈ π`: only `(ϕ - ψ)` is physically fixed.
+  At these points, individual Euler angles are convention-dependent.
+- Interval boundary: `ψ = -π` and `ψ = 3π` represent the same branch endpoint; strict comparisons therefore use 4π-wrapped differences.
+
 ## Python Cross-Check Workflow
 
 ### Fixture generation

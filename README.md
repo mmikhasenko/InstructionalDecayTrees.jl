@@ -143,7 +143,7 @@ MeasureSpherical(:theta, :phi, (1, -2))
   - `tracker1`, `tracker2`
   - `relative = tracker2 * inv(tracker1)` (other relative to reference)
   - `results1`, `results2`, `final_objs1`, `final_objs2`
-- `decode_lorentz_helicity(tracker)`: Decode `(ϕ, θ, ξ, ϕ_rf, θ_rf, ψ_rf)` in helicity convention from `Λ` with `ψ_rf` normalized to `[-π, 3π)`.
+- `decode_lorentz_helicity(tracker)`: Decode `(ϕ, θ, ξ, ϕ_rf, θ_rf, ψ_rf)` in helicity convention with `ψ_rf` normalized to `[-π, 3π)`. For pure-rotation decodes (`ξ≈0`), SU(2) branch information is used to select `ψ` vs `ψ+2π`.
 - `wigner_zyz(tracker)`: Extract `(ϕ_rf, θ_rf, ψ_rf)` from full Lorentz decode (no pure-rotation shortcut).
 
 ### Composite Instructions

@@ -137,3 +137,26 @@ In the current implementation:
 - SU2 is accumulated in the tracker,
 - for pure rotations (\(\xi \approx 0\)), \(U\) is used to choose the \(\psi\) branch (\(\psi\) vs \(\psi+2\pi\)),
 - for generic boosted transforms, decoding remains \(\Lambda\)-branch based.
+
+## 6. Corner-Case Policy
+
+1. Pure rotation (\(\xi \approx 0\)):
+\[
+M \approx \begin{pmatrix}R&0\\0&1\end{pmatrix}.
+\]
+This is where SU2 branch selection is applied to recover the spinorial \(2\pi\) phase choice.
+
+2. Boosted case (\(\xi \not\approx 0\)):
+the implementation keeps the \(\Lambda\)-decoded branch for per-path decode; tests compare wrapped angles.
+
+3. ZYZ singular lines:
+\[
+\theta_{\mathrm{rf}} \approx 0 \quad\text{or}\quad \theta_{\mathrm{rf}} \approx \pi.
+\]
+At these lines, Euler decomposition is non-unique; only angle sums/differences are invariant.
+
+4. Endpoint equivalence in the chosen interval:
+\[
+\psi=-\pi \equiv 3\pi \pmod{4\pi}.
+\]
+Therefore strict branch checks use a \(4\pi\)-wrapped difference, not raw subtraction of normalized values.
