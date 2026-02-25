@@ -39,57 +39,50 @@ to the corresponding vectors in the other path frame:
 """
 relative_tracker(reference::LorentzTracker, other::LorentzTracker) = other * inv(reference)
 
-const _P_E_TO_XYZE = [
-    0.0 1.0 0.0 0.0
-    0.0 0.0 1.0 0.0
-    0.0 0.0 0.0 1.0
-    1.0 0.0 0.0 0.0
-]
-
-_to_xyze_basis(M::AbstractMatrix) = _P_E_TO_XYZE * M * transpose(_P_E_TO_XYZE)
-
-function _rz_xyze(θ::Real)
+function _rz_e(θ::Real)
     c, s = cos(θ), sin(θ)
     return [
-        c -s 0.0 0.0
-        s  c 0.0 0.0
+        1.0 0.0 0.0 0.0
+        0.0 c -s 0.0
+        0.0 s  c 0.0
+        0.0 0.0 0.0 1.0
+    ]
+end
+
+function _ry_e(θ::Real)
+    c, s = cos(θ), sin(θ)
+    return [
+        1.0 0.0 0.0 0.0
+        0.0 c 0.0 s
         0.0 0.0 1.0 0.0
-        0.0 0.0 0.0 1.0
+        0.0 -s 0.0 c
     ]
 end
 
-function _ry_xyze(θ::Real)
-    c, s = cos(θ), sin(θ)
-    return [
-         c 0.0 s 0.0
-        0.0 1.0 0.0 0.0
-        -s 0.0 c 0.0
-        0.0 0.0 0.0 1.0
-    ]
-end
-
-function _bz_xyze(ξ::Real)
+function _bz_e(ξ::Real)
     g = cosh(ξ)
     bg = sinh(ξ)
     return [
-        1.0 0.0 0.0 0.0
+        g 0.0 0.0 bg
         0.0 1.0 0.0 0.0
-        0.0 0.0 g bg
-        0.0 0.0 bg g
+        0.0 0.0 1.0 0.0
+        bg 0.0 0.0 g
     ]
 end
 
-function _decode_rotation_zyz_xyze(R::AbstractMatrix)
+function _decode_rotation_zyz_e(R::AbstractMatrix)
     ϕ = atan(R[2, 3], R[1, 3])
     θ = acos(clamp(R[3, 3], -1.0, 1.0))
     ψ = atan(R[3, 2], -R[3, 1])
     return (ϕ = ϕ, θ = θ, ψ = ψ)
 end
 
-function _decode_boost_xyze(M::AbstractMatrix; atol::Real=1e-10)
-    v = M[:, 4] # M * [0,0,0,1]
-    γ = v[4]
-    abs_mom = sqrt(v[1]^2 + v[2]^2 + v[3]^2)
+function _decode_boost_e(M::AbstractMatrix; atol::Real=1e-10)
+    # In (E, px, py, pz) basis, boosting the rest vector [1,0,0,0]
+    # corresponds to taking the first column.
+    v = M[:, 1]
+    γ = v[1]
+    abs_mom = sqrt(v[2]^2 + v[3]^2 + v[4]^2)
 
     γ = (abs(γ) < 1 && abs(γ - 1) < atol) ? 1.0 : γ
     if γ < 1
@@ -97,8 +90,8 @@ function _decode_boost_xyze(M::AbstractMatrix; atol::Real=1e-10)
     end
 
     ξ = acosh(γ)
-    ϕ = atan(v[2], v[1])
-    cinput = abs(abs_mom) <= atol ? 0.0 : v[3] / abs_mom
+    ϕ = atan(v[3], v[2])
+    cinput = abs(abs_mom) <= atol ? 0.0 : v[4] / abs_mom
     θ = acos(clamp(cinput, -1.0, 1.0))
 
     if abs(γ - 1) < atol
@@ -107,11 +100,11 @@ function _decode_boost_xyze(M::AbstractMatrix; atol::Real=1e-10)
     return (ϕ = ϕ, θ = θ, ξ = ξ)
 end
 
-function _decode_lorentz_helicity_zyz_xyze(M::AbstractMatrix; atol::Real=1e-10)
-    b = _decode_boost_xyze(M; atol = atol)
-    M_rf = _bz_xyze(-b.ξ) * _ry_xyze(-b.θ) * _rz_xyze(-b.ϕ) * M
-    rot = abs(b.ξ) < atol ? _decode_rotation_zyz_xyze(M[1:3, 1:3]) :
-          _decode_rotation_zyz_xyze(M_rf[1:3, 1:3])
+function _decode_lorentz_helicity_zyz_e(M::AbstractMatrix; atol::Real=1e-10)
+    b = _decode_boost_e(M; atol = atol)
+    M_rf = _bz_e(-b.ξ) * _ry_e(-b.θ) * _rz_e(-b.ϕ) * M
+    rot = abs(b.ξ) < atol ? _decode_rotation_zyz_e(M[2:4, 2:4]) :
+          _decode_rotation_zyz_e(M_rf[2:4, 2:4])
     return (ϕ = b.ϕ, θ = b.θ, ξ = b.ξ, ϕ_rf = rot.ϕ, θ_rf = rot.θ, ψ_rf = rot.ψ)
 end
 
@@ -122,8 +115,7 @@ Decode full Lorentz parameters in helicity convention from a tracked transform.
 Returns `(ϕ, θ, ξ, ϕ_rf, θ_rf, ψ_rf)`.
 """
 function decode_lorentz_helicity(t::LorentzTracker; atol::Real=1e-10)
-    M = _to_xyze_basis(t.Λ)
-    return _decode_lorentz_helicity_zyz_xyze(M; atol = atol)
+    return _decode_lorentz_helicity_zyz_e(t.Λ; atol = atol)
 end
 
 """
@@ -158,10 +150,11 @@ function _step_matrix(transform)
     return M
 end
 
-function _apply_step(state::TrackedState, transform)
+function _apply_step_with_tracking(state::TrackedState, transform)
     new_objs = map(transform, state.objs)
     M_step = _step_matrix(transform)
-    # Active convention: newest step left-multiplies the accumulated map.
+    # Tracking is generic: infer the linear map by transforming basis vectors
+    # and left-compose with the previously accumulated map.
     new_tracker = LorentzTracker(M_step * state.tracker.Λ)
     return TrackedState(new_objs, new_tracker)
 end
@@ -169,7 +162,7 @@ end
 function apply_decay_instruction(instr::ToHelicityFrame, state::TrackedState)
     P_tot = get_fourvector(state.objs, instr.indices)
     transform = p -> transform_to_cmf(p, P_tot)
-    return (_apply_step(state, transform), (;))
+    return (_apply_step_with_tracking(state, transform), (;))
 end
 
 function apply_decay_instruction(instr::ToHelicityFrameParticle2, state::TrackedState)
@@ -181,14 +174,14 @@ function apply_decay_instruction(instr::ToHelicityFrameParticle2, state::Tracked
     γ = boost_gamma(P_tot)
 
     transform = p -> p |> Rz(-ϕ_inv) |> Ry(-θ_inv) |> Ry(-π) |> Bz(-γ)
-    return (_apply_step(state, transform), (;))
+    return (_apply_step_with_tracking(state, transform), (;))
 end
 
 function apply_decay_instruction(instr::PlaneAlign, state::TrackedState)
     axis_z = get_fourvector(state.objs, instr.z_idx)
     axis_x = get_fourvector(state.objs, instr.x_idx)
     transform = p -> rotate_to_plane(p, axis_z, axis_x)
-    return (_apply_step(state, transform), (;))
+    return (_apply_step_with_tracking(state, transform), (;))
 end
 
 function apply_decay_instruction(instr::ToGottfriedJacksonFrame, state::TrackedState)
