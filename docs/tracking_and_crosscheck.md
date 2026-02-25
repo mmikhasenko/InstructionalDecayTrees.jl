@@ -7,7 +7,7 @@ This package now supports tracked execution of instruction paths, so Lorentz tra
 ## Tracked Execution
 
 ### Types
-- `LorentzTracker`: accumulated 4x4 Lorentz transformation in `(E, px, py, pz)` basis.
+- `LorentzTracker`: accumulated 4x4 Lorentz transformation in `(px, py, pz, E)` basis.
 - `TrackedState`: wraps `(objs, tracker)` and reuses existing `apply_decay_instruction` dispatch.
 
 ### Core helpers

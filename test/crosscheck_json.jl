@@ -21,15 +21,6 @@ function _objs_from_momenta(momenta_xyze, n::Int)
     end
 end
 
-const _P_XYZE_TO_E = [
-    0.0 0.0 0.0 1.0
-    1.0 0.0 0.0 0.0
-    0.0 1.0 0.0 0.0
-    0.0 0.0 1.0 0.0
-]
-
-_xyze_to_e_basis(M) = _P_XYZE_TO_E * M * transpose(_P_XYZE_TO_E)
-
 _wrapdiff(a, b) = mod(a - b + π, 2π) - π
 
 @testset "JSON cross-check against decayangle (helicity)" begin
@@ -48,8 +39,7 @@ _wrapdiff(a, b) = mod(a - b + π, 2π) - π
                 cmp = compare_instruction_paths(pref, pother, objs)
 
                 M_py_xyze = reduce(vcat, [reshape(Float64.(row), 1, :) for row in target.relative_matrix_xyze])
-                M_py_e = _xyze_to_e_basis(M_py_xyze)
-                @test cmp.relative.Λ ≈ M_py_e atol = 2e-9
+                @test cmp.relative.Λ ≈ M_py_xyze atol = 2e-9
 
                 w = wigner_zyz(cmp.relative)
                 w_py = Float64.(target.relative_wigner)

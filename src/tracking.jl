@@ -5,7 +5,7 @@ using FourVectors
     LorentzTracker
 
 Tracks an accumulated Lorentz transformation matrix `Λ` acting on column vectors
-ordered as `(E, px, py, pz)`.
+ordered as `(px, py, pz, E)`.
 """
 struct LorentzTracker{T<:AbstractMatrix}
     Λ::T
@@ -39,50 +39,50 @@ to the corresponding vectors in the other path frame:
 """
 relative_tracker(reference::LorentzTracker, other::LorentzTracker) = other * inv(reference)
 
-function _rz_e(θ::Real)
+function _rz_xyze(θ::Real)
     c, s = cos(θ), sin(θ)
     return [
-        1.0 0.0 0.0 0.0
-        0.0 c -s 0.0
-        0.0 s  c 0.0
+        c -s 0.0 0.0
+        s  c 0.0 0.0
+        0.0 0.0 1.0 0.0
         0.0 0.0 0.0 1.0
     ]
 end
 
-function _ry_e(θ::Real)
+function _ry_xyze(θ::Real)
     c, s = cos(θ), sin(θ)
     return [
-        1.0 0.0 0.0 0.0
-        0.0 c 0.0 s
-        0.0 0.0 1.0 0.0
-        0.0 -s 0.0 c
+         c 0.0 s 0.0
+        0.0 1.0 0.0 0.0
+        -s 0.0 c 0.0
+        0.0 0.0 0.0 1.0
     ]
 end
 
-function _bz_e(ξ::Real)
+function _bz_xyze(ξ::Real)
     g = cosh(ξ)
     bg = sinh(ξ)
     return [
-        g 0.0 0.0 bg
+        1.0 0.0 0.0 0.0
         0.0 1.0 0.0 0.0
-        0.0 0.0 1.0 0.0
-        bg 0.0 0.0 g
+        0.0 0.0 g bg
+        0.0 0.0 bg g
     ]
 end
 
-function _decode_rotation_zyz_e(R::AbstractMatrix)
+function _decode_rotation_zyz_xyze(R::AbstractMatrix)
     ϕ = atan(R[2, 3], R[1, 3])
     θ = acos(clamp(R[3, 3], -1.0, 1.0))
     ψ = atan(R[3, 2], -R[3, 1])
     return (ϕ = ϕ, θ = θ, ψ = ψ)
 end
 
-function _decode_boost_e(M::AbstractMatrix; atol::Real=1e-10)
-    # In (E, px, py, pz) basis, boosting the rest vector [1,0,0,0]
-    # corresponds to taking the first column.
-    v = M[:, 1]
-    γ = v[1]
-    abs_mom = sqrt(v[2]^2 + v[3]^2 + v[4]^2)
+function _decode_boost_xyze(M::AbstractMatrix; atol::Real=1e-10)
+    # In (px,py,pz,E) basis, boosting the rest vector [0,0,0,1]
+    # corresponds to taking the fourth column.
+    v = M[:, 4]
+    γ = v[4]
+    abs_mom = sqrt(v[1]^2 + v[2]^2 + v[3]^2)
 
     γ = (abs(γ) < 1 && abs(γ - 1) < atol) ? 1.0 : γ
     if γ < 1
@@ -90,8 +90,8 @@ function _decode_boost_e(M::AbstractMatrix; atol::Real=1e-10)
     end
 
     ξ = acosh(γ)
-    ϕ = atan(v[3], v[2])
-    cinput = abs(abs_mom) <= atol ? 0.0 : v[4] / abs_mom
+    ϕ = atan(v[2], v[1])
+    cinput = abs(abs_mom) <= atol ? 0.0 : v[3] / abs_mom
     θ = acos(clamp(cinput, -1.0, 1.0))
 
     if abs(γ - 1) < atol
@@ -100,11 +100,11 @@ function _decode_boost_e(M::AbstractMatrix; atol::Real=1e-10)
     return (ϕ = ϕ, θ = θ, ξ = ξ)
 end
 
-function _decode_lorentz_helicity_zyz_e(M::AbstractMatrix; atol::Real=1e-10)
-    b = _decode_boost_e(M; atol = atol)
-    M_rf = _bz_e(-b.ξ) * _ry_e(-b.θ) * _rz_e(-b.ϕ) * M
-    rot = abs(b.ξ) < atol ? _decode_rotation_zyz_e(M[2:4, 2:4]) :
-          _decode_rotation_zyz_e(M_rf[2:4, 2:4])
+function _decode_lorentz_helicity_zyz_xyze(M::AbstractMatrix; atol::Real=1e-10)
+    b = _decode_boost_xyze(M; atol = atol)
+    M_rf = _bz_xyze(-b.ξ) * _ry_xyze(-b.θ) * _rz_xyze(-b.ϕ) * M
+    rot = abs(b.ξ) < atol ? _decode_rotation_zyz_xyze(M[1:3, 1:3]) :
+          _decode_rotation_zyz_xyze(M_rf[1:3, 1:3])
     return (ϕ = b.ϕ, θ = b.θ, ξ = b.ξ, ϕ_rf = rot.ϕ, θ_rf = rot.θ, ψ_rf = rot.ψ)
 end
 
@@ -115,7 +115,7 @@ Decode full Lorentz parameters in helicity convention from a tracked transform.
 Returns `(ϕ, θ, ξ, ϕ_rf, θ_rf, ψ_rf)`.
 """
 function decode_lorentz_helicity(t::LorentzTracker; atol::Real=1e-10)
-    return _decode_lorentz_helicity_zyz_e(t.Λ; atol = atol)
+    return _decode_lorentz_helicity_zyz_xyze(t.Λ; atol = atol)
 end
 
 """
@@ -129,20 +129,20 @@ function wigner_zyz(t::LorentzTracker; atol::Real=1e-10)
     return (ϕ = decoded.ϕ_rf, θ = decoded.θ_rf, ψ = decoded.ψ_rf)
 end
 
-_as_column(p::FourVector) = [p.E, p.px, p.py, p.pz]
+_as_column(p::FourVector) = [p.px, p.py, p.pz, p.E]
 
-function _basis4(::Type{T}=Float64) where {T<:Real}
+function _basis4(::Type{T}) where {T<:Real}
     return (
-        FourVector(zero(T), zero(T), zero(T); E = one(T)),
         FourVector(one(T), zero(T), zero(T); E = zero(T)),
         FourVector(zero(T), one(T), zero(T); E = zero(T)),
         FourVector(zero(T), zero(T), one(T); E = zero(T)),
+        FourVector(zero(T), zero(T), zero(T); E = one(T)),
     )
 end
 
-function _step_matrix(transform)
-    basis = _basis4()
-    M = Matrix{Float64}(undef, 4, 4)
+function _step_matrix(transform, ::Type{T}) where {T<:Real}
+    basis = _basis4(T)
+    M = Matrix{T}(undef, 4, 4)
     for (j, b) in enumerate(basis)
         bp = transform(b)
         M[:, j] = _as_column(bp)
@@ -152,7 +152,8 @@ end
 
 function _apply_step_with_tracking(state::TrackedState, transform)
     new_objs = map(transform, state.objs)
-    M_step = _step_matrix(transform)
+    Tobj = typeof(first(state.objs).px)
+    M_step = _step_matrix(transform, Tobj)
     # Tracking is generic: infer the linear map by transforming basis vectors
     # and left-compose with the previously accumulated map.
     new_tracker = LorentzTracker(M_step * state.tracker.Λ)

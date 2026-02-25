@@ -138,7 +138,7 @@ MeasureSpherical(:theta, :phi, (1, -2))
 ### Tracked Lorentz Execution
 - `TrackedState(objs, tracker)`: State object carrying both transformed objects and accumulated Lorentz tracker.
 - `init_tracked_state(objs)`: Convenience constructor with identity tracker.
-- `LorentzTracker`: Stores accumulated 4x4 Lorentz matrix in `(E, px, py, pz)` basis.
+- `LorentzTracker`: Stores accumulated 4x4 Lorentz matrix in `(px, py, pz, E)` basis.
 - `compare_instruction_paths(path_reference, path_other, objs)`: Executes both paths and returns:
   - `tracker1`, `tracker2`
   - `relative = tracker2 * inv(tracker1)` (other relative to reference)

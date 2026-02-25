@@ -45,6 +45,22 @@ end
     @test cmp.relative.Λ ≈ I4 atol = 1e-10
 end
 
+@testset "TrackedState Float32 support" begin
+    p1 = FourVector(Float32(0.3), Float32(0.2), Float32(0.1); M = Float32(0.2))
+    p2 = FourVector(Float32(-0.1), Float32(0.4), Float32(-0.3); M = Float32(0.4))
+    p3 = FourVector(Float32(-0.2), Float32(-0.6), Float32(0.2); M = Float32(0.3))
+    objs_local = (p1, p2, p3)
+
+    path = (
+        ToHelicityFrame((1, 2, 3)),
+        ToHelicityFrame((1, 2)),
+    )
+
+    (state, _) = apply_decay_instruction(path, init_tracked_state(objs_local; T = Float32))
+    @test state isa TrackedState
+    @test eltype(state.tracker.Λ) == Float32
+end
+
 @testset "Cross-check against decayangle (4-body, particle 3)" begin
     # Same four-vectors used in existing tests and Python cross-check harness.
     p1 = FourVector(-0.1467, 0.2235, -0.7847; E = 2.0452)
@@ -69,12 +85,12 @@ end
     cmp = compare_instruction_paths(path_ref, path_other, objs_local)
 
     # Expected relative matrix from decayangle:
-    # rel = boost_other @ inv(boost_reference), converted to (E,px,py,pz) basis.
+    # rel = boost_other @ inv(boost_reference), in (px,py,pz,E) basis.
     rel_expected = [
-        1.0 0.0 0.0 0.0
-        0.0 0.9262423551164856 -0.023396446110968982 -0.3762016824758271
-        0.0 0.02166279138320244 0.9997262650053029 -0.008838468647614112
-        0.0 0.37630549166568683 3.6985450305581945e-5 0.9264956425015303
+        0.9262423551164856 -0.023396446110968982 -0.3762016824758271 0.0
+        0.02166279138320244 0.9997262650053029 -0.008838468647614112 0.0
+        0.37630549166568683 3.6985450305581945e-5 0.9264956425015303 0.0
+        0.0 0.0 0.0 1.0
     ]
 
     @test cmp.relative.Λ ≈ rel_expected atol = 5e-10
