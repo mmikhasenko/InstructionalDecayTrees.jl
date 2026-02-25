@@ -41,38 +41,45 @@ relative_tracker(reference::LorentzTracker, other::LorentzTracker) = other * inv
 
 function _rz_xyze(θ::Real)
     c, s = cos(θ), sin(θ)
+    z = zero(c)
+    o = one(c)
     return [
-        c -s 0.0 0.0
-        s  c 0.0 0.0
-        0.0 0.0 1.0 0.0
-        0.0 0.0 0.0 1.0
+        c -s z z
+        s  c z z
+        z z o z
+        z z z o
     ]
 end
 
 function _ry_xyze(θ::Real)
     c, s = cos(θ), sin(θ)
+    z = zero(c)
+    o = one(c)
     return [
-         c 0.0 s 0.0
-        0.0 1.0 0.0 0.0
-        -s 0.0 c 0.0
-        0.0 0.0 0.0 1.0
+         c z s z
+        z o z z
+        -s z c z
+        z z z o
     ]
 end
 
 function _bz_xyze(ξ::Real)
     g = cosh(ξ)
     bg = sinh(ξ)
+    z = zero(g)
+    o = one(g)
     return [
-        1.0 0.0 0.0 0.0
-        0.0 1.0 0.0 0.0
-        0.0 0.0 g bg
-        0.0 0.0 bg g
+        o z z z
+        z o z z
+        z z g bg
+        z z bg g
     ]
 end
 
 function _decode_rotation_zyz_xyze(R::AbstractMatrix)
     ϕ = atan(R[2, 3], R[1, 3])
-    θ = acos(clamp(R[3, 3], -1.0, 1.0))
+    oneR = one(R[3, 3])
+    θ = acos(clamp(R[3, 3], -oneR, oneR))
     ψ = atan(R[3, 2], -R[3, 1])
     return (ϕ = ϕ, θ = θ, ψ = ψ)
 end
@@ -83,19 +90,22 @@ function _decode_boost_xyze(M::AbstractMatrix; atol::Real=1e-10)
     v = M[:, 4]
     γ = v[4]
     abs_mom = sqrt(v[1]^2 + v[2]^2 + v[3]^2)
+    oneγ = one(γ)
+    zerom = zero(abs_mom)
 
-    γ = (abs(γ) < 1 && abs(γ - 1) < atol) ? 1.0 : γ
-    if γ < 1
+    γ = (abs(γ) < oneγ && abs(γ - oneγ) < atol) ? oneγ : γ
+    if γ < oneγ
         error("gamma < 1 in Lorentz decode: not a valid Lorentz transformation.")
     end
 
     ξ = acosh(γ)
     ϕ = atan(v[2], v[1])
-    cinput = abs(abs_mom) <= atol ? 0.0 : v[3] / abs_mom
-    θ = acos(clamp(cinput, -1.0, 1.0))
+    cinput = abs(abs_mom) <= atol ? zerom : v[3] / abs_mom
+    θ = acos(clamp(cinput, -oneγ, oneγ))
 
-    if abs(γ - 1) < atol
-        return (ϕ = 0.0, θ = 0.0, ξ = 0.0)
+    if abs(γ - oneγ) < atol
+        zeroγ = zero(γ)
+        return (ϕ = zeroγ, θ = zeroγ, ξ = zeroγ)
     end
     return (ϕ = ϕ, θ = θ, ξ = ξ)
 end
