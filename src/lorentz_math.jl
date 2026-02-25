@@ -114,9 +114,12 @@ function _decode_boost_xyze(M::AbstractMatrix; atol::Real=1e-10)
     oneγ = one(γ)
     zerom = zero(abs_mom)
 
-    γ = (abs(γ) < oneγ && abs(γ - oneγ) < atol) ? oneγ : γ
     if γ < oneγ
-        error("gamma < 1 in Lorentz decode: not a valid Lorentz transformation.")
+        if isapprox(γ, oneγ; atol = atol)
+            γ = oneγ
+        else
+            error("gamma < 1 in Lorentz decode: not a valid Lorentz transformation.")
+        end
     end
 
     ξ = acosh(γ)

@@ -47,7 +47,7 @@ python3 -m venv /tmp/venvb
 3. Generate fixture from this repository:
 
 ```bash
-cd /Users/mikhailmikhasenko/Documents/DecayModels.CAT/InstructionalDecayTrees.jl
+cd /path/to/your/InstructionalDecayTrees.jl/checkout
 DECAYANGLE_SRC=/tmp/decayangle/src /tmp/venvb/bin/python test/generate_decayangle_fixture.py
 ```
 
