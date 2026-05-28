@@ -14,15 +14,12 @@ A lightweight, type-stable DSL for calculating kinematic variables in particle d
 
 ## Installation
 
-This package depends on `FourVectors.jl`, which is an unregistered package from GitHub:
+```julia
+using Pkg
+Pkg.add("InstructionalDecayTrees")
+```
 
-- **If `Manifest.toml` is present** (as in this repository): The unregistered package will be automatically installed when you add `InstructionalDecayTrees.jl` to your environment, as the manifest includes the exact dependency information.
-
-- **If using a different setup without the manifest**: You need to manually install `FourVectors.jl` before adding `InstructionalDecayTrees.jl`:
-  ```julia
-  using Pkg
-  Pkg.add(url="https://github.com/mmikhasenko/FourVectors.jl.git")
-  ```
+This package depends on [`FourVectors.jl`](https://github.com/mmikhasenko/FourVectors.jl), which is registered in the General registry and will be installed automatically as a dependency.
 
 ## Usage
 
