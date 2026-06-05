@@ -80,7 +80,18 @@ _build_su2(ϕ, θ, ξ, ϕ_rf, θ_rf, ψ_rf) =
 
 normalize_psi(ψ::Real) = mod(ψ + π, 4π) - π
 
-function _decode_rotation_zyz_su2(U::AbstractMatrix; atol::Real=1e-12)
+_real_eltype(::Type{T}) where {T<:Real} = T
+_real_eltype(::Type{Complex{T}}) where {T<:Real} = T
+
+"""
+    _default_atol(x)
+
+Type-scaled tolerance: `10 * eps(T)` for the scalar element type of `x`
+(a matrix or its element type).
+"""
+_default_atol(x) = 10 * eps(_real_eltype(eltype(x)))
+
+function _decode_rotation_zyz_su2(U::AbstractMatrix; atol::Real=_default_atol(U))
     a = U[1, 1]
     c = U[2, 1]
     t = abs(a)
@@ -105,7 +116,7 @@ function _decode_rotation_zyz_su2(U::AbstractMatrix; atol::Real=1e-12)
     return (ϕ = _wrap2pi(real(ϕ)), θ = real(θ), ψ = normalize_psi(real(ψ)))
 end
 
-function _decode_boost_xyze(M::AbstractMatrix; atol::Real=1e-10)
+function _decode_boost_xyze(M::AbstractMatrix; atol::Real=_default_atol(M))
     # In (px,py,pz,E) basis, boosting the rest vector [0,0,0,1]
     # corresponds to taking the fourth column.
     v = M[:, 4]
@@ -134,7 +145,7 @@ function _decode_boost_xyze(M::AbstractMatrix; atol::Real=1e-10)
     return (ϕ = ϕ, θ = θ, ξ = ξ)
 end
 
-function _decode_lorentz_helicity_zyz_xyze(M::AbstractMatrix; atol::Real=1e-10)
+function _decode_lorentz_helicity_zyz_xyze(M::AbstractMatrix; atol::Real=_default_atol(M))
     b = _decode_boost_xyze(M; atol = atol)
     M_rf = _bz_xyze(-b.ξ) * _ry_xyze(-b.θ) * _rz_xyze(-b.ϕ) * M
     rot = abs(b.ξ) < atol ? _decode_rotation_zyz_xyze(M[1:3, 1:3]) :
