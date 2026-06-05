@@ -17,7 +17,7 @@ Algebra details and matrix formulas:
 - `init_tracked_state(objs)`
 - `relative_tracker(reference, other) = other * inv(reference)`
 - `decode_lorentz_helicity(tracker)` -> `(ϕ, θ, ξ, ϕ_rf, θ_rf, ψ_rf)`
-- `wigner_zyz(tracker)` -> `(ϕ_rf, θ_rf, ψ_rf)`
+- `wigner_zyz(tracker)` -> `(ϕ, θ, ψ)` (public API; SO(3) vs SU(2) comparison: `docs/wigner_su2_so3.qmd`)
 - `compare_instruction_paths(path_reference, path_other, objs)`
 
 ## Convention

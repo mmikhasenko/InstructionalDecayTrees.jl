@@ -141,9 +141,7 @@ MeasureSpherical(:theta, :phi, (1, -2))
   - `relative = tracker2 * inv(tracker1)` (other relative to reference)
   - `results1`, `results2`, `final_objs1`, `final_objs2`
 - `decode_lorentz_helicity(tracker)`: Decode `(ϕ, θ, ξ, ϕ_rf, θ_rf, ψ_rf)` in helicity convention with `ψ_rf` normalized to `[-π, 3π)`. For pure-rotation decodes (`ξ≈0`), SU(2) branch information is used to select `ψ` vs `ψ+2π`.
-- `wigner_zyz(tracker)`: Extract `(ϕ_rf, θ_rf, ψ_rf)` from full Lorentz decode (no pure-rotation shortcut).
-- `wigner_zyz_so3(tracker)`: Extract `(ϕ_rf, θ_rf, ψ_rf)` from `Λ`/SO(3) decoding only.
-- `wigner_zyz_su2(tracker)`: Extract `(ϕ_rf, θ_rf, ψ_rf)` from tracked SU2 matrix (pure-rotation trackers, `ξ≈0`).
+- `wigner_zyz(tracker)`: Extract relative Wigner angles `(ϕ, θ, ψ)` in ZYZ order. This is the supported public API (full Lorentz decode; SU(2) branch resolution when `ξ≈0`). See `docs/wigner_su2_so3.qmd` for an SO(3) vs SU(2) walkthrough rendered in CI.
 
 ### Composite Instructions
 - `CompositeInstruction(instructions)`: Holds a sequence of instructions. The type parameter encodes the full instruction sequence, enabling type-level dispatch. Tuples are automatically converted to `CompositeInstruction` when passed to `apply_decay_instruction`, but you can create them explicitly for type-level dispatch or reusable patterns.
@@ -154,6 +152,15 @@ MeasureSpherical(:theta, :phi, (1, -2))
 - `MeasureCosThetaPhi(tag, indices)`: Store (cosθ, ϕ) of sum of `indices` as a NamedTuple. Accepts single index, tuple, or vector.
 - `MeasureMassCosThetaPhi(tag, indices)`: Store (m, cosθ, ϕ) of sum of `indices` as a NamedTuple. Accepts single index, tuple, or vector.
 - `MeasureInvariant(tag, indices)`: Store invariant mass squared of sum of `indices`. Accepts single index, tuple, or vector.
+
+## Tutorial (Quarto)
+
+The SO(3) vs SU(2) Wigner-angle walkthrough is `docs/wigner_su2_so3.qmd`. CI renders it on each PR; locally:
+
+```bash
+julia --project=docs -e 'using Pkg; Pkg.instantiate()'
+quarto render docs/wigner_su2_so3.qmd
+```
 
 ## Cross-Check Fixtures (Python ↔ Julia)
 

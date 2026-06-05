@@ -156,8 +156,8 @@ end
         U = InstructionalDecayTrees._build_su2(0.0, 0.0, 0.0, ϕ0, θ0, ψ0)
         t = LorentzTracker(Λ, U)
 
-        a_so3 = wigner_zyz_so3(t)
-        a_su2 = wigner_zyz_su2(t)
+        a_so3 = InstructionalDecayTrees._wigner_zyz_so3(t)
+        a_su2 = InstructionalDecayTrees._wigner_zyz_su2(t)
         a_mix = wigner_zyz(t)
 
         @test abs(wrap2(a_so3.ϕ, a_su2.ϕ)) < 1e-12

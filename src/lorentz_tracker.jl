@@ -60,8 +60,15 @@ end
 """
     wigner_zyz(t; atol=1e-10)
 
-Extract active helicity-convention ZYZ Wigner angles `(ϕ_rf, θ_rf, ψ_rf)` from
-the full tracked Lorentz transform by decoding boost+rotation.
+Extract active helicity-convention ZYZ Wigner angles `(ϕ, θ, ψ)` from a tracked
+relative transform.
+
+This is the supported public API. It decodes the full Lorentz matrix and, for
+pure-rotation trackers (`ξ ≈ 0`), uses the tracked SU(2) matrix to resolve the
+`ψ` vs `ψ + 2π` branch on `[-π, 3π)`.
+
+For an instructive comparison of SO(3) (`Λ`) vs SU(2) (`U`) decoders, see
+`docs/wigner_su2_so3.qmd`.
 """
 function wigner_zyz(t::LorentzTracker; atol::Real=1e-10)
     decoded = decode_lorentz_helicity(t; atol = atol)
@@ -69,24 +76,24 @@ function wigner_zyz(t::LorentzTracker; atol::Real=1e-10)
 end
 
 """
-    wigner_zyz_so3(t; atol=1e-10)
+    _wigner_zyz_so3(t; atol=1e-10)
 
-Extract ZYZ angles from the spatial SO(3) block decoded via the tracked 4x4
-Lorentz matrix only. This does not use SU2 branch information.
+Internal: ZYZ angles from the spatial SO(3) block of `Λ` only (no SU(2) branch).
+Used by the Wigner-angle tutorial; prefer [`wigner_zyz`](@ref).
 """
-function wigner_zyz_so3(t::LorentzTracker; atol::Real=1e-10)
+function _wigner_zyz_so3(t::LorentzTracker; atol::Real=1e-10)
     d = _decode_lorentz_helicity_zyz_xyze(t.Λ; atol = atol)
     return (ϕ = d.ϕ_rf, θ = d.θ_rf, ψ = normalize_psi(d.ψ_rf))
 end
 
 """
-    wigner_zyz_su2(t; atol=1e-10)
+    _wigner_zyz_su2(t; atol=1e-10)
 
-Extract ZYZ angles from the tracked SU2 matrix. This method is intended for
-pure-rotation trackers (`ξ ≈ 0`), where `U` is unitary rotation-only.
+Internal: ZYZ angles from the tracked SU(2) matrix for pure rotations (`ξ ≈ 0`).
+Used by the Wigner-angle tutorial; prefer [`wigner_zyz`](@ref).
 """
-function wigner_zyz_su2(t::LorentzTracker; atol::Real=1e-10)
+function _wigner_zyz_su2(t::LorentzTracker; atol::Real=1e-10)
     d = _decode_lorentz_helicity_zyz_xyze(t.Λ; atol = atol)
-    abs(d.ξ) < atol || error("wigner_zyz_su2 requires pure-rotation tracker (|ξ| < atol).")
+    abs(d.ξ) < atol || error("_wigner_zyz_su2 requires pure-rotation tracker (|ξ| < atol).")
     return _decode_rotation_zyz_su2(t.U; atol = atol)
 end
