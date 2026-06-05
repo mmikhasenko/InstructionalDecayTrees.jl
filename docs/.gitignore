@@ -1,4 +1,5 @@
 /.quarto/
+/build/
 **/*.quarto_ipynb
 wigner_su2_so3.md
 wigner_su2_so3.html
