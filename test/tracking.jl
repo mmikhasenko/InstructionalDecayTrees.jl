@@ -59,6 +59,13 @@ end
     (state, _) = apply_decay_instruction(path, init_tracked_state(objs_local; T = Float32))
     @test state isa TrackedState
     @test eltype(state.tracker.Λ) == Float32
+
+    cmp = compare_instruction_paths(path, path, objs_local; T = Float32)
+    atol32 = InstructionalDecayTrees._default_atol(cmp.relative.Λ)
+    @test atol32 ≈ 10 * eps(Float32)
+    @test cmp.relative.Λ ≈ Matrix{Float32}(I, 4, 4) atol = atol32
+    @test wigner_zyz(cmp.relative) isa NamedTuple
+    @test InstructionalDecayTrees._wigner_zyz_su2(cmp.relative) isa NamedTuple
 end
 
 @testset "Explicit SU2 step uses rapidity (not gamma)" begin

@@ -31,12 +31,14 @@ to the corresponding vectors in the other path frame:
 relative_tracker(reference::LorentzTracker, other::LorentzTracker) = other * inv(reference)
 
 """
-    decode_lorentz_helicity(t; atol=1e-10)
+    decode_lorentz_helicity(t; atol=10*eps(T))
 
 Decode full Lorentz parameters in helicity convention from a tracked transform.
 Returns `(ϕ, θ, ξ, ϕ_rf, θ_rf, ψ_rf)`.
+
+Default `atol` is `10 * eps(T)` where `T = eltype(t.Λ)`.
 """
-function decode_lorentz_helicity(t::LorentzTracker; atol::Real=1e-10)
+function decode_lorentz_helicity(t::LorentzTracker; atol::Real=_default_atol(t.Λ))
     d = _decode_lorentz_helicity_zyz_xyze(t.Λ; atol = atol)
     ψ_rf = d.ψ_rf
     # SU2 branch resolution is robust for pure-rotation relative transforms (ξ ≈ 0).
@@ -58,7 +60,7 @@ function decode_lorentz_helicity(t::LorentzTracker; atol::Real=1e-10)
 end
 
 """
-    wigner_zyz(t; atol=1e-10)
+    wigner_zyz(t; atol=10*eps(T))
 
 Extract active helicity-convention ZYZ Wigner angles `(ϕ, θ, ψ)` from a tracked
 relative transform.
@@ -67,32 +69,34 @@ This is the supported public API. It decodes the full Lorentz matrix and, for
 pure-rotation trackers (`ξ ≈ 0`), uses the tracked SU(2) matrix to resolve the
 `ψ` vs `ψ + 2π` branch on `[-π, 3π)`.
 
+Default `atol` is `10 * eps(T)` where `T = eltype(t.Λ)`.
+
 For an instructive comparison of SO(3) (`Λ`) vs SU(2) (`U`) decoders, see
 `docs/wigner_su2_so3.qmd`.
 """
-function wigner_zyz(t::LorentzTracker; atol::Real=1e-10)
+function wigner_zyz(t::LorentzTracker; atol::Real=_default_atol(t.Λ))
     decoded = decode_lorentz_helicity(t; atol = atol)
     return (ϕ = decoded.ϕ_rf, θ = decoded.θ_rf, ψ = decoded.ψ_rf)
 end
 
 """
-    _wigner_zyz_so3(t; atol=1e-10)
+    _wigner_zyz_so3(t; atol=10*eps(T))
 
 Internal: ZYZ angles from the spatial SO(3) block of `Λ` only (no SU(2) branch).
 Used by the Wigner-angle tutorial; prefer [`wigner_zyz`](@ref).
 """
-function _wigner_zyz_so3(t::LorentzTracker; atol::Real=1e-10)
+function _wigner_zyz_so3(t::LorentzTracker; atol::Real=_default_atol(t.Λ))
     d = _decode_lorentz_helicity_zyz_xyze(t.Λ; atol = atol)
     return (ϕ = d.ϕ_rf, θ = d.θ_rf, ψ = normalize_psi(d.ψ_rf))
 end
 
 """
-    _wigner_zyz_su2(t; atol=1e-10)
+    _wigner_zyz_su2(t; atol=10*eps(T))
 
 Internal: ZYZ angles from the tracked SU(2) matrix for pure rotations (`ξ ≈ 0`).
 Used by the Wigner-angle tutorial; prefer [`wigner_zyz`](@ref).
 """
-function _wigner_zyz_su2(t::LorentzTracker; atol::Real=1e-10)
+function _wigner_zyz_su2(t::LorentzTracker; atol::Real=_default_atol(t.Λ))
     d = _decode_lorentz_helicity_zyz_xyze(t.Λ; atol = atol)
     abs(d.ξ) < atol || error("_wigner_zyz_su2 requires pure-rotation tracker (|ξ| < atol).")
     return _decode_rotation_zyz_su2(t.U; atol = atol)
