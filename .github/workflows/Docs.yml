@@ -25,6 +25,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
 
+permissions:
+  contents: write
+
 jobs:
   docs:
     name: Documentation
@@ -46,5 +49,12 @@ jobs:
         run: julia --project=docs docs/make.jl
         env:
           JULIA_PKG_SERVER: ""
+      - name: Deploy documentation
+        if: github.event_name != 'pull_request'
+        run: |
+          julia --project=docs -e '
+            using Documenter
+            deploydocs(; repo = "github.com/mmikhasenko/InstructionalDecayTrees.jl")'
+        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
