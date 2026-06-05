@@ -46,5 +46,3 @@ makedocs(;
         "Wigner angles: SO(3) vs SU(2)" => "wigner_tutorial.md",
     ],
 )
-
-deploydocs(; repo = "github.com/mmikhasenko/InstructionalDecayTrees.jl")
