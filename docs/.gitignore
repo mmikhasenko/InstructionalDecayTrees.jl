@@ -1,4 +1,6 @@
 /.quarto/
 **/*.quarto_ipynb
+wigner_su2_so3.md
 wigner_su2_so3.html
 wigner_su2_so3_files/
+/src/wigner_tutorial.md

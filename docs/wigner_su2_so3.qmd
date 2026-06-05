@@ -2,7 +2,7 @@
 title: "Wigner angles: SO(3) from Λ vs SU(2) from U"
 engine: julia
 format:
-  html: default
+  gfm: default
 ---
 
 InstructionalDecayTrees tracks each instruction path with a 4×4 Lorentz matrix

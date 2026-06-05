@@ -1,4 +1,4 @@
-name: Tutorial
+name: Docs
 
 on:
   push:
@@ -8,7 +8,8 @@ on:
       - "docs/**"
       - "src/**"
       - "*.toml"
-      - ".github/workflows/Tutorial.yml"
+      - ".github/workflows/Docs.yml"
+    tags: ["*"]
   pull_request:
     branches:
       - main
@@ -16,7 +17,7 @@ on:
       - "docs/**"
       - "src/**"
       - "*.toml"
-      - ".github/workflows/Tutorial.yml"
+      - ".github/workflows/Docs.yml"
     types: [opened, synchronize, reopened]
   workflow_dispatch:
 
@@ -25,8 +26,8 @@ concurrency:
   cancel-in-progress: ${{ startsWith(github.ref, 'refs/pull/') }}
 
 jobs:
-  wigner-tutorial:
-    name: Quarto Wigner tutorial
+  docs:
+    name: Documentation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -41,5 +42,9 @@ jobs:
           julia --project=docs -e '
             using Pkg
             Pkg.instantiate()'
-      - name: Render Wigner SO(3) vs SU(2) tutorial
-        run: quarto render docs/wigner_su2_so3.qmd
+      - name: Build documentation
+        run: julia --project=docs docs/make.jl
+        env:
+          JULIA_PKG_SERVER: ""
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
