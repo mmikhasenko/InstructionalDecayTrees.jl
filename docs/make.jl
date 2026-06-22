@@ -2,21 +2,39 @@ using InstructionalDecayTrees
 using Documenter
 
 const DOCS = @__DIR__
-const QMD = joinpath(DOCS, "wigner_su2_so3.qmd")
-const GFM = joinpath(DOCS, "wigner_su2_so3.md")
-const TUTORIAL = joinpath(DOCS, "src", "wigner_tutorial.md")
+const QUARTO_PAGES = [
+    (
+        qmd = joinpath(DOCS, "wigner_su2_so3.qmd"),
+        gfm = joinpath(DOCS, "wigner_su2_so3.md"),
+        md = joinpath(DOCS, "src", "wigner_tutorial.md"),
+        id = "wigner",
+        edit = "../wigner_su2_so3.qmd",
+    ),
+    (
+        qmd = joinpath(DOCS, "massless_wigner_limit.qmd"),
+        gfm = joinpath(DOCS, "massless_wigner_limit.md"),
+        md = joinpath(DOCS, "src", "massless_wigner_limit.md"),
+        id = "massless-wigner-limit",
+        edit = "../massless_wigner_limit.qmd",
+    ),
+]
 
-function render_wigner_tutorial!()
+function render_quarto_page!(page)
     cd(DOCS) do
-        run(`quarto render $(basename(QMD)) --to gfm`)
+        run(`quarto render $(basename(page.qmd)) --to gfm`)
     end
-    isfile(GFM) || error("expected Quarto output at $(GFM)")
+    isfile(page.gfm) || error("expected Quarto output at $(page.gfm)")
 end
 
-function documenter_tutorial_page(gfm_path::AbstractString)
+function documenter_tutorial_page(page)
+    gfm_path = page.gfm
     body = read(gfm_path, String)
-    body = replace(body, r"^# (.+)$"m => s"# [\1](@id wigner)"; count = 1)
-    meta = "```@meta\nCurrentModule = InstructionalDecayTrees\nEditURL = \"../wigner_su2_so3.qmd\"\n```\n\n"
+    body = replace(
+        body,
+        r"^# ([^\r\n]+)"m => SubstitutionString("# [\\1](@id $(page.id))");
+        count = 1,
+    )
+    meta = "```@meta\nCurrentModule = InstructionalDecayTrees\nEditURL = \"$(page.edit)\"\n```\n\n"
     return meta * body
 end
 
@@ -27,8 +45,10 @@ DocMeta.setdocmeta!(
     recursive = true,
 )
 
-render_wigner_tutorial!()
-write(TUTORIAL, documenter_tutorial_page(GFM))
+for page in QUARTO_PAGES
+    render_quarto_page!(page)
+    write(page.md, documenter_tutorial_page(page))
+end
 
 makedocs(;
     modules = [InstructionalDecayTrees],
@@ -44,5 +64,6 @@ makedocs(;
     pages = [
         "Home" => "index.md",
         "Wigner angles: SO(3) vs SU(2)" => "wigner_tutorial.md",
+        "Small-mass Wigner limit" => "massless_wigner_limit.md",
     ],
 )
