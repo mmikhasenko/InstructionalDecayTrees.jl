@@ -16,12 +16,15 @@ include("crosscheck_json.jl")
 @testset "Compact instruction display" begin
     @test repr(ToHelicityFrame((1, 2))) == "ToHelicityFrame((1, 2))"
     @test repr(ToHelicityFrame(1)) == "ToHelicityFrame(1)"
+    @test repr(ToHelicityFrameParticle2((1, 2))) == "ToHelicityFrameParticle2((1, 2))"
+    @test repr(ToHelicityFrameParticle2(1)) == "ToHelicityFrameParticle2(1)"
     @test repr(MeasureCosThetaPhi(:v1, (1, 2))) == "MeasureCosThetaPhi(:v1, (1, 2))"
     @test repr(MeasureCosThetaPhi(:v1, 1)) == "MeasureCosThetaPhi(:v1, 1)"
 
-    program = (ToHelicityFrame((1, 2)), MeasureCosThetaPhi(:v1, (1, 2)))
+    program =
+        (ToHelicityFrame((1, 2)), ToHelicityFrameParticle2((2, 3)), MeasureCosThetaPhi(:v1, (1, 2)))
     @test repr(program) ==
-          "(ToHelicityFrame((1, 2)), MeasureCosThetaPhi(:v1, (1, 2)))"
+          "(ToHelicityFrame((1, 2)), ToHelicityFrameParticle2((2, 3)), MeasureCosThetaPhi(:v1, (1, 2)))"
 end
 
 # User provided vectors

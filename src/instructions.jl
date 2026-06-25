@@ -47,6 +47,12 @@ end
 # Support varargs syntax
 ToHelicityFrameParticle2(indices::Int...) = ToHelicityFrameParticle2(indices)
 
+function Base.show(io::IO, instr::ToHelicityFrameParticle2)
+    print(io, "ToHelicityFrameParticle2(")
+    show_indices(io, instr.indices)
+    print(io, ")")
+end
+
 """
     PlaneAlign(z_idx, x_idx)
 
