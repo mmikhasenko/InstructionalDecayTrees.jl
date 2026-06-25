@@ -124,6 +124,14 @@ function _decode_boost_xyze(M::AbstractMatrix; atol::Real=_default_atol(M))
     abs_mom = sqrt(v[1]^2 + v[2]^2 + v[3]^2)
     oneγ = one(γ)
     zerom = zero(abs_mom)
+    # Products of helicity-frame transforms can be pure rotations up to
+    # sqrt(eps) noise in the boost column. Decode those as zero boosts.
+    rest_atol = max(atol, sqrt(eps(_real_eltype(eltype(M)))))
+
+    if abs(γ - oneγ) < rest_atol && abs_mom < rest_atol
+        zeroγ = zero(γ)
+        return (ϕ = zeroγ, θ = zeroγ, ξ = zeroγ)
+    end
 
     if γ < oneγ
         if isapprox(γ, oneγ; atol = atol)

@@ -176,3 +176,25 @@ end
         @test abs(wrap4(a_mix.ψ, a_su2.ψ)) < 1e-12
     end
 end
+
+@testset "Public Wigner API handles near-pure small-mass rotations" begin
+    wrap2(a) = mod(a + π, 2π) - π
+
+    q1(m) = FourVector(0.20, -0.10, -0.50; M = m)
+    q2 = FourVector(0.35, 0.22, 0.28; M = 0.45)
+    q3 = FourVector(-0.18, 0.31, -0.12; M = 0.60)
+    q4 = FourVector(-0.37, -0.43, 0.34; M = 0.80)
+
+    path_123_12_1 = (
+        ToHelicityFrame((1, 2, 3)),
+        ToHelicityFrame((1, 2)),
+        ToHelicityFrame(1),
+    )
+    path_13_1 = (ToHelicityFrame((1, 3)), ToHelicityFrame(1))
+
+    cmp = compare_instruction_paths(path_123_12_1, path_13_1, (q1(1e-3), q2, q3, q4))
+    ang = wigner_zyz(cmp.relative)
+
+    @test ang.θ / π ≈ 0.0004819884356761267 atol = 1e-8
+    @test abs(wrap2(ang.ϕ + ang.ψ)) / π ≈ 0.7685257868157153 atol = 1e-8
+end
