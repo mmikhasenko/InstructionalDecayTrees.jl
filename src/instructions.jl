@@ -9,6 +9,14 @@ normalize_indices(spec::Int) = (spec,)
 normalize_indices(spec::Tuple) = spec
 normalize_indices(spec::Vector{Int}) = Tuple(spec)
 
+function show_indices(io::IO, indices::Tuple)
+    if length(indices) == 1
+        print(io, only(indices))
+    else
+        show(io, indices)
+    end
+end
+
 struct ToHelicityFrame{T<:Tuple} <: AbstractInstruction
     indices::T
 
@@ -20,6 +28,12 @@ struct ToHelicityFrame{T<:Tuple} <: AbstractInstruction
 end
 # Support varargs syntax
 ToHelicityFrame(indices::Int...) = ToHelicityFrame(indices)
+
+function Base.show(io::IO, instr::ToHelicityFrame)
+    print(io, "ToHelicityFrame(")
+    show_indices(io, instr.indices)
+    print(io, ")")
+end
 
 struct ToHelicityFrameParticle2{T<:Tuple} <: AbstractInstruction
     indices::T
@@ -170,3 +184,11 @@ struct MeasureCosThetaPhi{T<:Tuple} <: AbstractMeasureInstruction
 end
 # Support varargs syntax
 MeasureCosThetaPhi(tag::Symbol, indices::Int...) = MeasureCosThetaPhi(tag, indices)
+
+function Base.show(io::IO, instr::MeasureCosThetaPhi)
+    print(io, "MeasureCosThetaPhi(")
+    show(io, instr.tag)
+    print(io, ", ")
+    show_indices(io, instr.indices)
+    print(io, ")")
+end

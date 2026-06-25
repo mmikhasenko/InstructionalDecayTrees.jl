@@ -13,6 +13,17 @@ include("gj_numerical.jl")
 include("tracking.jl")
 include("crosscheck_json.jl")
 
+@testset "Compact instruction display" begin
+    @test repr(ToHelicityFrame((1, 2))) == "ToHelicityFrame((1, 2))"
+    @test repr(ToHelicityFrame(1)) == "ToHelicityFrame(1)"
+    @test repr(MeasureCosThetaPhi(:v1, (1, 2))) == "MeasureCosThetaPhi(:v1, (1, 2))"
+    @test repr(MeasureCosThetaPhi(:v1, 1)) == "MeasureCosThetaPhi(:v1, 1)"
+
+    program = (ToHelicityFrame((1, 2)), MeasureCosThetaPhi(:v1, (1, 2)))
+    @test repr(program) ==
+          "(ToHelicityFrame((1, 2)), MeasureCosThetaPhi(:v1, (1, 2)))"
+end
+
 # User provided vectors
 pD_vec = FourVector(-0.1467, 0.2235, -0.7847; E = 2.0452)   # 1
 pK_vec = FourVector(-0.0873, 0.1803, -0.5584; E = 0.7718)   # 2
