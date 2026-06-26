@@ -1,4 +1,17 @@
+"""
+    AbstractInstruction
+
+Supertype for all decay instructions. Concrete instructions either transform
+the current four-vector frame or measure quantities in that frame.
+"""
 abstract type AbstractInstruction end
+
+"""
+    AbstractMeasureInstruction <: AbstractInstruction
+
+Internal supertype for instructions that leave the objects unchanged and return
+one or more measurements.
+"""
 abstract type AbstractMeasureInstruction <: AbstractInstruction end
 
 # Type alias for flexible index specification (for constructors)
@@ -17,6 +30,15 @@ function show_indices(io::IO, indices::Tuple)
     end
 end
 
+"""
+    ToHelicityFrame(indices)
+    ToHelicityFrame(i, j, ...)
+
+Boost all objects to the rest frame of the sum selected by `indices`.
+
+`indices` may be a single integer, a tuple, a vector, or varargs. Negative
+indices use the corresponding four-vector with the opposite sign.
+"""
 struct ToHelicityFrame{T<:Tuple} <: AbstractInstruction
     indices::T
 
@@ -35,6 +57,16 @@ function Base.show(io::IO, instr::ToHelicityFrame)
     print(io, ")")
 end
 
+"""
+    ToHelicityFrameParticle2(indices)
+    ToHelicityFrameParticle2(i, j, ...)
+
+Boost all objects to the rest frame of the sum selected by `indices` using the
+particle-2 helicity convention.
+
+This convention orients the selected system with the opposite spatial momentum
+before the boost. `indices` accepts the same forms as [`ToHelicityFrame`](@ref).
+"""
 struct ToHelicityFrameParticle2{T<:Tuple} <: AbstractInstruction
     indices::T
 
@@ -77,6 +109,14 @@ struct PlaneAlign{Tz<:Tuple,Tx<:Tuple} <: AbstractInstruction
     end
 end
 
+function Base.show(io::IO, instr::PlaneAlign)
+    print(io, "PlaneAlign(")
+    show_indices(io, instr.z_idx)
+    print(io, ", ")
+    show_indices(io, instr.x_idx)
+    print(io, ")")
+end
+
 """
     ToGottfriedJacksonFrame(system_indices, beam_idx, target_idx)
 
@@ -107,6 +147,25 @@ struct ToGottfriedJacksonFrame{Tsys<:Tuple,Tbeam<:Tuple,Ttarget<:Tuple} <:
     end
 end
 
+function Base.show(io::IO, instr::ToGottfriedJacksonFrame)
+    print(io, "ToGottfriedJacksonFrame(")
+    show_indices(io, instr.system_indices)
+    print(io, ", ")
+    show_indices(io, instr.beam_idx)
+    print(io, ", ")
+    show_indices(io, instr.target_idx)
+    print(io, ")")
+end
+
+"""
+    MeasurePolar(tag, idx)
+
+Measure the polar angle θ of `idx` in the current frame and store it under
+`tag` in the result `NamedTuple`.
+
+`idx` may be a single integer, tuple, or vector. Negative indices use the
+corresponding four-vector with the opposite sign.
+"""
 struct MeasurePolar{T<:Tuple} <: AbstractMeasureInstruction
     tag::Symbol
     idx::T
@@ -117,6 +176,14 @@ struct MeasurePolar{T<:Tuple} <: AbstractMeasureInstruction
         idx_norm = normalize_indices(idx)
         new{typeof(idx_norm)}(tag, idx_norm)
     end
+end
+
+function Base.show(io::IO, instr::MeasurePolar)
+    print(io, "MeasurePolar(")
+    show(io, instr.tag)
+    print(io, ", ")
+    show_indices(io, instr.idx)
+    print(io, ")")
 end
 
 """
@@ -139,6 +206,23 @@ end
 MeasureSpherical(theta_tag::Symbol, phi_tag::Symbol, indices::Int...) =
     MeasureSpherical(theta_tag, phi_tag, indices)
 
+function Base.show(io::IO, instr::MeasureSpherical)
+    print(io, "MeasureSpherical(")
+    show(io, instr.theta_tag)
+    print(io, ", ")
+    show(io, instr.phi_tag)
+    print(io, ", ")
+    show_indices(io, instr.indices)
+    print(io, ")")
+end
+
+"""
+    MeasureInvariant(tag, indices)
+    MeasureInvariant(tag, i, j, ...)
+
+Measure the invariant mass squared of the sum selected by `indices` and store
+it under `tag` in the result `NamedTuple`.
+"""
 struct MeasureInvariant{T<:Tuple} <: AbstractMeasureInstruction
     tag::Symbol
     indices::T
@@ -151,6 +235,14 @@ struct MeasureInvariant{T<:Tuple} <: AbstractMeasureInstruction
 end
 # Support varargs syntax
 MeasureInvariant(tag::Symbol, indices::Int...) = MeasureInvariant(tag, indices)
+
+function Base.show(io::IO, instr::MeasureInvariant)
+    print(io, "MeasureInvariant(")
+    show(io, instr.tag)
+    print(io, ", ")
+    show_indices(io, instr.indices)
+    print(io, ")")
+end
 
 """
     MeasureMassCosThetaPhi(tag, indices)
@@ -171,6 +263,14 @@ struct MeasureMassCosThetaPhi{T<:Tuple} <: AbstractMeasureInstruction
 end
 # Support varargs syntax
 MeasureMassCosThetaPhi(tag::Symbol, indices::Int...) = MeasureMassCosThetaPhi(tag, indices)
+
+function Base.show(io::IO, instr::MeasureMassCosThetaPhi)
+    print(io, "MeasureMassCosThetaPhi(")
+    show(io, instr.tag)
+    print(io, ", ")
+    show_indices(io, instr.indices)
+    print(io, ")")
+end
 
 """
     MeasureCosThetaPhi(tag, indices)

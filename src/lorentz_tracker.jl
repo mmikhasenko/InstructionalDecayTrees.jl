@@ -1,5 +1,5 @@
 """
-    LorentzTracker
+    LorentzTracker([T=Float64])
 
 Tracks an accumulated Lorentz transformation matrix `Λ` acting on column vectors
 ordered as `(px, py, pz, E)`.

@@ -1,15 +1,16 @@
 """
     apply_decay_instruction(instr, objs)
 
-Execute an instruction or sequence of instructions on `objs`.
+Execute an instruction or instruction sequence on `objs`.
 Returns a tuple: `(modified_objects, results_named_tuple)`.
 
-The `instr` can be:
-- An `AbstractInstruction`: Executed directly
+This is the public execution entry point. The `instr` can be:
+- A single instruction: Executed directly
 - A `CompositeInstruction`: Executed with nested recursive execution, maintaining encapsulation
-- A `Tuple` of instructions: Automatically wrapped in a `CompositeInstruction` for convenience
+- A tuple of instructions: treated as a convenient instruction sequence
 
-Nested CompositeInstructions are executed recursively, maintaining encapsulation of complexity.
+Nested `CompositeInstruction`s are executed recursively, maintaining encapsulation
+of reusable instruction groups.
 """
 function apply_decay_instruction end
 
@@ -39,11 +40,10 @@ function apply_decay_instruction(instr::CompositeInstruction, objs)
     return (current_objs, all_results)
 end
 
-# Deprecated: use apply_decay_instruction instead
 """
     execute_decay_program(objs, program)
 
-Deprecated: use `apply_decay_instruction(program, objs)` instead.
+Deprecated: use `apply_decay_instruction(sequence, objs)` instead.
 This function is kept for backward compatibility but will be removed in a future version.
 """
 function execute_decay_program(objs, program)

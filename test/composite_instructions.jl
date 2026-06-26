@@ -3,7 +3,7 @@ using Test
 
 @testset "CompositeInstruction" begin
     # Test that CompositeInstruction is a valid instruction type
-    @test CompositeInstruction <: AbstractInstruction
+    @test CompositeInstruction <: InstructionalDecayTrees.AbstractInstruction
 
     # Test that CompositeInstruction can be constructed
     instr1 = ToHelicityFrame((1, 2))
@@ -11,7 +11,7 @@ using Test
     composite = CompositeInstruction((instr1, instr2))
 
     @test composite isa CompositeInstruction
-    @test composite isa AbstractInstruction
+    @test composite isa InstructionalDecayTrees.AbstractInstruction
     @test length(composite.instructions) == 2
     @test composite.instructions[1] isa ToHelicityFrame
     @test composite.instructions[2] isa PlaneAlign
@@ -21,7 +21,7 @@ end
     # Verify ToGottfriedJacksonFrame is its own type
     gj_instr = ToGottfriedJacksonFrame((1, 2, 3), 4, 5)
     @test gj_instr isa ToGottfriedJacksonFrame
-    @test gj_instr isa AbstractInstruction
+    @test gj_instr isa InstructionalDecayTrees.AbstractInstruction
 
     # Test constructor with different input types
     gj1 = ToGottfriedJacksonFrame((1, 2, 3), 4, 5)
@@ -54,13 +54,13 @@ end
     ))
 
     # Execute and verify nested recursive execution works (complexity is encapsulated)
-    (final_objs, results) = execute_decay_program(objs, outer)
+    (final_objs, results) = apply_decay_instruction(outer, objs)
 
     @test haskey(results, :theta)
     @test results.theta isa Real
 
-    # Test that execute_decay_program accepts CompositeInstruction directly
-    (final_objs2, results2) = execute_decay_program(objs, outer)
+    # Test that apply_decay_instruction accepts CompositeInstruction directly
+    (final_objs2, results2) = apply_decay_instruction(outer, objs)
     @test results2.theta == results.theta
 
     # Test deeply nested composites
@@ -71,6 +71,6 @@ end
         MeasurePolar(:theta_deep, 3),
     ))
 
-    (_, results_deep) = execute_decay_program(objs, deeply_nested)
+    (_, results_deep) = apply_decay_instruction(deeply_nested, objs)
     @test haskey(results_deep, :theta_deep)
 end

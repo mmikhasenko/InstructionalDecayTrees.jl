@@ -8,9 +8,9 @@ A lightweight, type-stable DSL for calculating kinematic variables in particle d
 
 ## Features
 - **Declarative:** Describe *what* to calculate (boosts, rotations, angles) without writing matrix algebra.
-- **Type Stable:** Instruction sequences are encoded as types, results are NamedTuples. Fully inferable by the Julia compiler.
+- **Type Stable:** Instruction sequences can be written as tuples, and results are NamedTuples. Fully inferable by the Julia compiler.
 - **Generic:** The core logic is type-agnostic. Physics backend (currently `FourVectors.jl`) is modular.
-- **Unified API:** Single dispatch method `apply_decay_instruction` handles all instructions and sequences.
+- **Unified API:** The single public execution entry point, `apply_decay_instruction`, handles individual instructions and instruction sequences.
 
 ## Installation
 
@@ -34,8 +34,8 @@ p1 = FourVector(1.0, 0.0, 0.0; M=0.14)
 p2 = FourVector(-1.0, 0.0, 0.0; M=0.14)
 objs = (p1, p2) # Use a Tuple for type stability
 
-# 2. Define the instruction sequence (can be called "program" - it's just a tuple)
-program = (
+# 2. Define the instruction sequence
+sequence = (
     # Boost to rest frame of (1,2) - can use tuple, vector, or single index
     ToHelicityFrame((1, 2)),
     # Alternative: ToHelicityFrame([1, 2])
@@ -49,7 +49,7 @@ program = (
 )
 
 # 3. Execute using the universal dispatch method
-(final_objs, results) = apply_decay_instruction(program, objs)
+(final_objs, results) = apply_decay_instruction(sequence, objs)
 
 # Access results
 println(results.theta1)
@@ -62,15 +62,14 @@ println(results.m12)
 using InstructionalDecayTrees
 using FourVectors
 
-# Tuples are automatically wrapped in CompositeInstruction internally
-# You can use tuples directly (convenient):
-program = (
+# A tuple is the most convenient way to write an instruction sequence:
+sequence = (
     ToHelicityFrame((1, 2, 3)),
     PlaneAlign(4, 5),
     MeasureSpherical(:theta, :phi, (2, 3))
 )
 
-# Or explicitly create CompositeInstruction (enables type-level dispatch):
+# Or explicitly create CompositeInstruction for named, reusable sequences:
 composite = CompositeInstruction((
     ToHelicityFrame((1, 2, 3)),
     PlaneAlign(4, 5)
@@ -78,7 +77,7 @@ composite = CompositeInstruction((
 
 # Both work with apply_decay_instruction - the universal dispatch method
 objs = (p1, p2, p3, p4, p5)
-(final_objs, results) = apply_decay_instruction(program, objs)
+(final_objs, results) = apply_decay_instruction(sequence, objs)
 (final_objs2, results2) = apply_decay_instruction(composite, objs)
 ```
 
@@ -127,10 +126,10 @@ MeasureSpherical(:theta, :phi, (1, -2))
 - `ToGottfriedJacksonFrame(system_indices, beam_idx, target_idx)`: Composite transformation that combines `ToHelicityFrame(system_indices)` followed by `PlaneAlign(beam_idx, -target_idx)`. This implements the Gottfried-Jackson frame transformation commonly used in hadronic physics analyses. The `beam_idx` is aligned along +z, and `target_idx` (always positive) is automatically negated when passed to `PlaneAlign` to align it in the xz plane with negative Px, following the standard GJ definition. All parameters accept single indices, tuples, or vectors.
 
 ### Execution
-- `apply_decay_instruction(instr, objs)`: Universal dispatch method that executes any instruction or sequence:
-  - Single `AbstractInstruction`: Executed directly
+- `apply_decay_instruction(instr, objs)`: Single public execution entry point for any instruction or instruction sequence:
+  - Single instruction: Executed directly
   - `CompositeInstruction`: Executed with nested recursive execution
-  - `Tuple` of instructions: Automatically wrapped in `CompositeInstruction` internally
+  - Tuple of instructions: Treated as a convenient instruction sequence
 
 ### Tracked Lorentz Execution
 - `TrackedState(objs, tracker)`: State object carrying both transformed objects and accumulated Lorentz tracker.
@@ -144,7 +143,7 @@ MeasureSpherical(:theta, :phi, (1, -2))
 - `wigner_zyz(tracker)`: Extract relative Wigner angles `(ϕ, θ, ψ)` in ZYZ order. This is the supported public API (full Lorentz decode; SU(2) branch resolution when `ξ≈0`). See the [hosted tutorial](https://mmikhasenko.github.io/InstructionalDecayTrees.jl) (source: `docs/wigner_su2_so3.qmd`).
 
 ### Composite Instructions
-- `CompositeInstruction(instructions)`: Holds a sequence of instructions. The type parameter encodes the full instruction sequence, enabling type-level dispatch. Tuples are automatically converted to `CompositeInstruction` when passed to `apply_decay_instruction`, but you can create them explicitly for type-level dispatch or reusable patterns.
+- `CompositeInstruction(instructions)`: Holds a named, reusable sequence of instructions. Tuples are accepted directly by `apply_decay_instruction`, but you can create a `CompositeInstruction` explicitly when you want to pass a sequence around as one object or dispatch on it.
 
 ### Measurement Instructions
 - `MeasurePolar(tag, idx)`: Store polar angle. `idx` can be a single index, tuple, or vector.
