@@ -1,5 +1,5 @@
 """
-    TrackedState(objs, tracker)
+    TrackedState(objs, tracker::LorentzTracker)
 
 Carries both physics objects and an accumulated Lorentz tracker through
 `apply_decay_instruction` dispatch.
@@ -9,6 +9,14 @@ struct TrackedState{O,L}
     tracker::L
 end
 
+"""
+    init_tracked_state(objs; T=Float64)
+
+Create a [`TrackedState`](@ref) with `objs` and an identity [`LorentzTracker`](@ref).
+
+Use this when you want `apply_decay_instruction` to return both transformed
+objects and the accumulated Lorentz transformation.
+"""
 init_tracked_state(objs; T::Type{<:Real}=Float64) = TrackedState(objs, LorentzTracker(T))
 
 _as_column(p::FourVector) = [p.px, p.py, p.pz, p.E]

@@ -45,10 +45,10 @@ using Test
     objs = (p4π⁻, p4π⁰, k4_sum, p4b, p4t)
 
     # Transformation: ToGottfriedJacksonFrame
-    program = (ToGottfriedJacksonFrame((1, 2, 3), 4, 5),)
+    sequence = (ToGottfriedJacksonFrame((1, 2, 3), 4, 5),)
 
     # Execute
-    (final_objs, _) = execute_decay_program(objs, program)
+    (final_objs, _) = apply_decay_instruction(sequence, objs)
 
     # Verify expected properties after transformation
     # System (1,2,3) should be at rest
@@ -112,13 +112,13 @@ end
     objs = (omega_sum, bachelor_pi⁻, bachelor_pi0, beam, target)
 
     # Transform to GJ frame and measure angles of (pi-, pi0) = (2, 3)
-    program = (
+    sequence = (
         ToGottfriedJacksonFrame((1, 2, 3), 4, 5),
         MeasureSpherical(:theta_xi, :phi_xi, (2, 3)),
     )
 
     # Execute
-    (final_objs, results) = execute_decay_program(objs, program)
+    (final_objs, results) = apply_decay_instruction(sequence, objs)
 
     # Expected values
     expected_phi = 2.049532624031176

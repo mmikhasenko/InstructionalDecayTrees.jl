@@ -5,8 +5,7 @@ using FourVectors
 using LinearAlgebra
 
 # instructions.jl
-export AbstractInstruction,
-    ToHelicityFrame,
+export ToHelicityFrame,
     ToHelicityFrameParticle2,
     PlaneAlign,
     ToGottfriedJacksonFrame,

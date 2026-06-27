@@ -18,13 +18,33 @@ include("crosscheck_json.jl")
     @test repr(ToHelicityFrame(1)) == "ToHelicityFrame(1)"
     @test repr(ToHelicityFrameParticle2((1, 2))) == "ToHelicityFrameParticle2((1, 2))"
     @test repr(ToHelicityFrameParticle2(1)) == "ToHelicityFrameParticle2(1)"
+    @test repr(PlaneAlign(1, -2)) == "PlaneAlign(1, -2)"
+    @test repr(ToGottfriedJacksonFrame((1, 2), 3, 4)) ==
+          "ToGottfriedJacksonFrame((1, 2), 3, 4)"
+    @test repr(MeasurePolar(:theta, 1)) == "MeasurePolar(:theta, 1)"
+    @test repr(MeasureSpherical(:theta, :phi, (1, 2))) ==
+          "MeasureSpherical(:theta, :phi, (1, 2))"
+    @test repr(MeasureInvariant(:m12, (1, 2))) == "MeasureInvariant(:m12, (1, 2))"
+    @test repr(MeasureMassCosThetaPhi(:vars, (1, 2))) ==
+          "MeasureMassCosThetaPhi(:vars, (1, 2))"
     @test repr(MeasureCosThetaPhi(:v1, (1, 2))) == "MeasureCosThetaPhi(:v1, (1, 2))"
     @test repr(MeasureCosThetaPhi(:v1, 1)) == "MeasureCosThetaPhi(:v1, 1)"
 
-    program =
+    sequence =
         (ToHelicityFrame((1, 2)), ToHelicityFrameParticle2((2, 3)), MeasureCosThetaPhi(:v1, (1, 2)))
-    @test repr(program) ==
+    @test repr(sequence) ==
           "(ToHelicityFrame((1, 2)), ToHelicityFrameParticle2((2, 3)), MeasureCosThetaPhi(:v1, (1, 2)))"
+    @test repr(CompositeInstruction(sequence)) ==
+          "CompositeInstruction((ToHelicityFrame((1, 2)), ToHelicityFrameParticle2((2, 3)), MeasureCosThetaPhi(:v1, (1, 2))))"
+end
+
+@testset "Public docstrings" begin
+    docmeta = Base.Docs.meta(InstructionalDecayTrees)
+    for name in names(InstructionalDecayTrees)
+        name === :InstructionalDecayTrees && continue
+        binding = Base.Docs.Binding(InstructionalDecayTrees, name)
+        @test haskey(docmeta, binding)
+    end
 end
 
 # User provided vectors
@@ -36,9 +56,9 @@ pD0_vec = FourVector(0.2284, -0.3689, 1.2019; E = 2.2606)   # 4
 # Convert to Tuple for type stability
 objs = (pD_vec, pK_vec, ppi_vec, pD0_vec)
 
-# Define the program based on user comments
+# Define the instruction sequence based on user comments
 # Topology: Total -> (4,3,1) -> (4,3) -> 4
-program = (
+sequence = (
     # 1. go to the rest frame of all
     ToHelicityFrame((1, 2, 3, 4)),
 
@@ -71,10 +91,7 @@ program = (
 )
 
 @testset "InstructionalDecayTrees Execution" begin
-    @info "Starting execution..."
-    (final_objs, results) = execute_decay_program(objs, program)
-
-    @info "Results:" results
+    (final_objs, results) = apply_decay_instruction(sequence, objs)
 
     @test results isa NamedTuple
     @test haskey(results, :theta4_total)
@@ -118,7 +135,7 @@ end
 
 
 @testset "DPD angles" begin
-    program2 = (
+    sequence2 = (
         # 1. go to the rest frame of all
         ToHelicityFrame((1, 2, 3, 4)),
 
@@ -138,7 +155,7 @@ end
         MeasureCosThetaPhi(:vars_4, 4),
     )
 
-    (_, results) = execute_decay_program(objs, program2)
+    (_, results) = apply_decay_instruction(sequence2, objs)
 
     # 
     cosθ_julia = -0.863808416067478
@@ -157,11 +174,11 @@ end
     # Tuple for type stability: indices are 1=D, 2=K, 3=pi, 4=D0
     objs = (pD, pK, ppi, pD0)
 
-    # --- Program: Analyze Branch (D0, pi) ---
+    # --- Sequence: Analyze Branch (D0, pi) ---
     # Topology: Total -> (D0, pi) -> D0
     # Here we treat the (D0, pi) system as "Particle 2" relative to the first branch,
     # potentially using ToHelicityFrameParticle2 if we want the second-particle convention.
-    program_D0pi = (
+    sequence_D0pi = (
         # 1. Go to rest frame of Bp
         ToHelicityFrame((1, 2, 3, 4)),
 
@@ -177,7 +194,7 @@ end
     )
 
     # Execute
-    (_, res_D0pi) = execute_decay_program(objs, program_D0pi)
+    (_, res_D0pi) = apply_decay_instruction(sequence_D0pi, objs)
 
     cosθ_python = -0.8649158171627784
     ϕ_python = 0.6942087211091432
