@@ -67,3 +67,10 @@ makedocs(;
         "Small-mass Wigner limit" => "massless_wigner_limit.md",
     ],
 )
+
+deploydocs(;
+    repo = "github.com/mmikhasenko/InstructionalDecayTrees.jl",
+    root = DOCS,
+    target = "build",
+    versions = ["stable" => "v^", "v#.#.#", "dev" => "dev"],
+)

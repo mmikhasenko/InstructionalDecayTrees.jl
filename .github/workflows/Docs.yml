@@ -38,23 +38,16 @@ jobs:
         with:
           version: "1"
       - name: Use Julia cache
-        uses: julia-actions/cache@v3
+        uses: julia-actions/cache@v3.1.0
       - uses: quarto-dev/quarto-actions/setup@v2
       - name: Instantiate docs environment
         run: |
           julia --project=docs -e '
             using Pkg
             Pkg.instantiate()'
-      - name: Build documentation
+      - name: Build and deploy documentation
         run: julia --project=docs docs/make.jl
         env:
           JULIA_PKG_SERVER: ""
-      - name: Deploy documentation
-        if: github.event_name != 'pull_request'
-        run: |
-          julia --project=docs -e '
-            using Documenter
-            deploydocs(; repo = "github.com/mmikhasenko/InstructionalDecayTrees.jl")'
-        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
