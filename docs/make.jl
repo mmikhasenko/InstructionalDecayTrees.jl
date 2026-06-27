@@ -73,5 +73,5 @@ deploydocs(;
     repo = "github.com/mmikhasenko/InstructionalDecayTrees.jl",
     root = DOCS,
     target = "build",
-    versions = ["stable" => "v^", "v#.#.#", "dev" => "dev"],
+    versions = ["v#.#.#", "dev" => "dev"],
 )
