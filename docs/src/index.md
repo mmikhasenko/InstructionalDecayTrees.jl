@@ -4,14 +4,29 @@ InstructionalDecayTrees provides declarative decay-angle programs: boost and
 rotate four-vectors through instruction paths, measure kinematic variables, and
 track accumulated Lorentz transforms for cross-checks between topologies.
 
-## Getting started
+## Installation
 
-- Define an instruction sequence as a tuple of instructions (`ToHelicityFrame`, `MeasurePolar`, …).
-- Run it with `apply_decay_instruction(sequence, objs)`.
-- Use the same public execution entry point, `apply_decay_instruction`, for a
-  single instruction, a tuple of instructions, or a `CompositeInstruction`.
-- For path comparisons, use `compare_instruction_paths` and extract relative
-  Wigner angles with `wigner_zyz`.
+```julia
+using Pkg
+Pkg.add("InstructionalDecayTrees")
+```
+
+The package depends on [`FourVectors.jl`](https://github.com/mmikhasenko/FourVectors.jl),
+which is registered in the General registry and is installed automatically.
+
+## Overview
+
+- **Declarative:** describe boosts, rotations, and angle measurements as an
+  instruction path instead of hand-written matrix algebra.
+- **Type-stable:** instruction sequences are tuples of concrete types; results
+  are `NamedTuple`s that the Julia compiler can specialize on.
+- **Modular backend:** the core DSL is backend-agnostic; the current physics
+  backend is `FourVectors.jl`.
+- **Unified execution:** [`apply_decay_instruction`](@ref) is the single public
+  entry point for one instruction, a tuple of instructions, or a
+  [`CompositeInstruction`](@ref).
+
+## Getting started
 
 ```julia
 using InstructionalDecayTrees
@@ -30,25 +45,72 @@ program = (
 final_objs, results = apply_decay_instruction(program, objs)
 ```
 
-Instruction indices may be a single integer or a tuple/vector of integers.
-Negative indices use the corresponding four-vector with a minus sign, which is
-useful for aligning axes and comparing path conventions.
+Tuples are the most convenient way to write a program. You can also wrap a
+reusable sequence in a [`CompositeInstruction`](@ref):
+
+```julia
+composite = CompositeInstruction((
+    ToHelicityFrame((1, 2, 3)),
+    PlaneAlign(4, 5),
+))
+
+final_objs, results = apply_decay_instruction(composite, objs)
+```
+
+For path comparisons, use [`compare_instruction_paths`](@ref) and extract
+relative Wigner angles with [`wigner_zyz`](@ref).
+
+## Index specification
+
+Instructions that take indices accept:
+
+- a single `Int` (one four-vector),
+- a `Tuple` or `Vector{Int}` (sum of the selected four-vectors), or
+- varargs such as `ToHelicityFrame(1, 2)` on supported constructors.
+
+Negative indices use the corresponding four-vector with a minus sign. This is
+useful for axis alignment and for comparing equivalent path conventions:
+
+```julia
+ToHelicityFrame(-1)              # uses -objs[1]
+PlaneAlign(1, -2)                # z from objs[1], x from -objs[2]
+ToHelicityFrame((1, -2, 3))      # objs[1] + (-objs[2]) + objs[3]
+```
 
 ## Main instructions
 
-- `ToHelicityFrame(indices)`: boost all objects to the rest frame of the sum of
+### Frame transformations
+
+- [`ToHelicityFrame`](@ref): boost all objects to the rest frame of the sum of
   `indices`.
-- `ToHelicityFrameParticle2(indices)`: boost to the rest frame of `indices` using the "particle 2" convention (aligns momentum along `-z` before boost).
-- `PlaneAlign(z_idx, x_idx)`: rotate the frame so `z_idx` points along `+z` and
-  `x_idx` lies in the `xz` plane.
-- `ToGottfriedJacksonFrame(system_indices, beam_idx, target_idx)`: build the
-  standard Gottfried-Jackson frame transformation.
-- `MeasurePolar`, `MeasureSpherical`, `MeasureCosThetaPhi`,
-  `MeasureMassCosThetaPhi`, and `MeasureInvariant`: store kinematic quantities
-  in the returned `NamedTuple`.
-- `CompositeInstruction(instructions)`: hold a reusable typed instruction
-  sequence. Plain tuples of instructions are accepted directly by
-  `apply_decay_instruction`.
+- [`ToHelicityFrameParticle2`](@ref): same rest frame, but using the
+  particle-2 helicity convention (momentum oriented along `-z` before the boost).
+- [`PlaneAlign`](@ref): rotate so `z_idx` points along `+z` and `x_idx` lies in
+  the `xz` plane.
+- [`ToGottfriedJacksonFrame`](@ref): `ToHelicityFrame(system_indices)` followed
+  by `PlaneAlign(beam_idx, -target_idx)` for the standard Gottfried–Jackson
+  frame.
+
+### Measurements
+
+- [`MeasurePolar`](@ref), [`MeasureSpherical`](@ref), [`MeasureCosThetaPhi`](@ref),
+  [`MeasureMassCosThetaPhi`](@ref), and [`MeasureInvariant`](@ref) store
+  kinematic quantities in the returned `NamedTuple`.
+
+### Tracked Lorentz execution
+
+For topology cross-checks, run instruction paths on a [`TrackedState`](@ref) to
+accumulate a [`LorentzTracker`](@ref):
+
+- [`init_tracked_state`](@ref) starts from identity.
+- [`compare_instruction_paths`](@ref) runs reference and alternate paths and
+  returns trackers, results, and transformed objects.
+- [`decode_lorentz_helicity`](@ref) decodes `(ϕ, θ, ξ, ϕ_rf, θ_rf, ψ_rf)` in
+  helicity convention.
+- [`wigner_zyz`](@ref) extracts relative Wigner angles `(ϕ, θ, ψ)`; see the
+  [SO(3) vs SU(2) tutorial](@ref wigner) for branch-resolution details.
+
+See also the [API reference](@ref api-reference) for full docstrings.
 
 ## Conventions
 
@@ -61,6 +123,21 @@ The SO(3) vs SU(2) Wigner-angle walkthrough is generated in CI from the Quarto
 source `docs/wigner_su2_so3.qmd` and published as
 [Wigner angles: SO(3) vs SU(2)](@ref wigner).
 
-Additional developer notes live in the repository under `docs/`:
-`tracking_and_crosscheck.md`, `lorentz_tracker_math.md`, and
-`decayangle_crosscheck.md`.
+## Developer notes
+
+The repository includes additional material under `docs/`:
+
+- `tracking_and_crosscheck.md` — tracked execution and Python cross-check workflow
+- `lorentz_tracker_math.md` — matrix conventions and decode formulas
+- `decayangle_crosscheck.md` — reproducibility notes for
+  `test/fixtures/decayangle_crosscheck.json`
+
+Cross-check fixtures are validated in `test/crosscheck_json.jl` against
+`decayangle` in helicity convention.
+
+To build these docs locally:
+
+```bash
+julia --project=docs -e 'using Pkg; Pkg.instantiate()'
+julia --project=docs docs/make.jl
+```
