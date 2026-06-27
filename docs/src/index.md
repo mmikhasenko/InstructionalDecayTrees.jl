@@ -38,6 +38,7 @@ useful for aligning axes and comparing path conventions.
 
 - `ToHelicityFrame(indices)`: boost all objects to the rest frame of the sum of
   `indices`.
+- `ToHelicityFrameParticle2(indices)`: boost to the rest frame of `indices` using the "particle 2" convention (aligns momentum along `-z` before boost).
 - `PlaneAlign(z_idx, x_idx)`: rotate the frame so `z_idx` points along `+z` and
   `x_idx` lies in the `xz` plane.
 - `ToGottfriedJacksonFrame(system_indices, beam_idx, target_idx)`: build the
