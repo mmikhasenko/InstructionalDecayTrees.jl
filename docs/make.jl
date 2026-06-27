@@ -63,7 +63,15 @@ makedocs(;
     ),
     pages = [
         "Home" => "index.md",
+        "API reference" => "api.md",
         "Wigner angles: SO(3) vs SU(2)" => "wigner_tutorial.md",
         "Small-mass Wigner limit" => "massless_wigner_limit.md",
     ],
+)
+
+deploydocs(;
+    repo = "github.com/mmikhasenko/InstructionalDecayTrees.jl",
+    root = DOCS,
+    target = "build",
+    versions = ["stable" => "v^", "v#.#.#", "dev" => "dev"],
 )
